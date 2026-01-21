@@ -235,10 +235,21 @@ body {
   background: rgba(255,255,255,0.55);
   padding: 7px 10px;
   border-radius: 999px;
+   white-space: nowrap;
 }
-.pills{
-  display: grid;
+/* Pills row: single line with horizontal scroll on small screens */
+.pills-scroll{
+  display: flex;
   gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+}
+.pills-scroll .pill{
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  white-space: nowrap;
 }
 
 /* Brand */
