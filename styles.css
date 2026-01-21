@@ -253,6 +253,11 @@ body {
   padding-bottom: 6px;
   -webkit-overflow-scrolling: touch;
   scroll-snap-type: x mandatory;
+   scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* IE 10+ */
+}
+.pills-scroll::-webkit-scrollbar{
+  display: none;
 }
 .pills-scroll .pill{
   flex: 0 0 auto;
