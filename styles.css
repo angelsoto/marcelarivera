@@ -415,6 +415,13 @@ body {
   border: 1px solid var(--line);
   background: rgba(255,255,255,0.45);
 }
+.media-frame img{
+  width: 100%;
+  height: clamp(220px, 28vw, 360px);
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
 .media-placeholder{
   min-height: 220px;
   display: grid;
