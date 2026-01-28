@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case Study — 90-Day Execution System | Mango Management</title>
+    
+    <!-- Roboto -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* =========================================
+           TOKENS & RESET
+           ========================================= */
+        :root {
+            /* Mango Spectrum */
+            --mango-green: #6f8f6a;
+            --mango-yellow: #d8c777;
+            --mango-orange: #d49a63;
+            --mango-red: #b87463;
+            
+            /* Neutral */
+            --base: #fbfaf7;
+            --base-2: #f5f2eb;
+            --ink: #1f2528;
+            --ink-2: #4b555c;
+            --line: rgba(31, 37, 40, 0.10);
+            
+            /* Tints (very light) */
+            --tint-green: rgba(111, 143, 106, 0.08);
+            --tint-yellow: rgba(216, 199, 119, 0.10);
+            --tint-orange: rgba(212, 154, 99, 0.08);
+            
+            /* Gradients (Diagonal 135°) */
+            --grad-gy: linear-gradient(135deg, rgba(111, 143, 106, 0.12) 0%, rgba(216, 199, 119, 0.10) 100%);
+            --grad-yo: linear-gradient(135deg, rgba(216, 199, 119, 0.12) 0%, rgba(212, 154, 99, 0.10) 100%);
+            
+            /* Spacing */
+            --container: 1100px;
+            --section-pad: 80px;
+            --section-pad-mob: 56px;
+            
+            /* Radius */
+            --r-lg: 18px;
+            --r-md: 14px;
+            --r-sm: 10px;
+            
+            /* Shadows (subtle, neutral) */
+            --shadow-1: 0 10px 24px rgba(31, 37, 40, 0.06);
+            --shadow-2: 0 16px 38px rgba(31, 37, 40, 0.10);
+            --shadow-hover: 0 20px 44px rgba(31, 37, 40, 0.14);
+            
+            /* Transitions */
+            --transition-slow: all 0.3s ease;
+        }
+        
+        *, *::before, *::after { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            font-family: "Roboto", system-ui, sans-serif;
+            background: var(--base);
+            color: var(--ink);
+            line-height: 1.65;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        img, svg { display: block; max-width: 100%; }
+        a { color: inherit; text-decoration: none; }
+        
+        /* =========================================
+           LAYOUT UTILITIES
+           ========================================= */
+        .container {
+            width: min(var(--container), calc(100% - 2rem));
+            margin: 0 auto;
+        }
+        
+        .section {
+            padding: var(--section-pad-mob) 0;
+        }
+        
+        @media (min-width: 768px) {
+            .section { padding: var(--section-pad) 0; }
+        }
+        
+        /* Background Strategies */
+        .section-neutral { background: var(--base); }
+        .section-tint { background: var(--tint-yellow); }
+        .section-gradient-gy { background: var(--grad-gy); }
+        .section-gradient-yo { background: var(--grad-yo); }
+        
+        .grid { display: grid; }
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .items-start { align-items: flex-start; }
+        .justify-between { justify-content: space-between; }
+        .gap-2 { gap: 0.5rem; }
+        .gap-3 { gap: 0.75rem; }
+        .gap-4 { gap: 1rem; }
+        .gap-5 { gap: 1.25rem; }
+        .gap-6 { gap: 1.5rem; }
+        .gap-8 { gap: 2rem; }
+        
+        @media (min-width: 768px) {
+            .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .md\:flex { display: flex; }
+            .md\:hidden { display: none; }
+        }
+        
+        @media (min-width: 1024px) {
+            .lg\:grid-cols-12 { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+            .lg\:col-span-7 { grid-column: span 7 / span 7; }
+            .lg\:col-span-5 { grid-column: span 5 / span 5; }
+            .lg\:col-span-8 { grid-column: span 8 / span 8; }
+            .lg\:col-span-4 { grid-column: span 4 / span 4; }
+        }
+        
+        /* =========================================
+           TYPOGRAPHY
+           ========================================= */
+        .eyebrow {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--ink-2);
+            font-weight: 500;
+        }
+        
+        h1, h2, h3 { margin: 0; font-weight: 500; letter-spacing: -0.01em; }
+        
+        .h1 {
+            font-size: clamp(32px, 5vw, 48px);
+            line-height: 1.15;
+            font-weight: 700;
+        }
+        
+        .h2 {
+            font-size: clamp(24px, 3vw, 32px);
+            line-height: 1.25;
+        }
+        
+        .h3 {
+            font-size: 18px;
+            line-height: 1.3;
+            font-weight: 500;
+        }
+        
+        .text-lg { font-size: 18px; }
+        .text-base { font-size: 16px; }
+        .text-sm { font-size: 14px; }
+        .text-xs { font-size: 12px; }
+        
+        .text-ink-2 { color: var(--ink-2); }
+        .font-500 { font-weight: 500; }
+        .font-700 { font-weight: 700; }
+        
+        /* =========================================
+           COMPONENTS
+           ========================================= */
+        
+        /* Cards - subtle, stable */
+        .card {
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid var(--line);
+            border-radius: var(--r-lg);
+            padding: 24px;
+            box-shadow: var(--shadow-1);
+            transition: var(--transition-slow);
+        }
+        
+        .card:hover {
+            box-shadow: var(--shadow-hover);
+        }
+        
+        .card-quiet {
+            background: rgba(255, 255, 255, 0.4);
+            padding: 20px;
+        }
+        
+        /* Buttons - min 44px tap targets */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 12px 20px;
+            min-height: 44px;
+            border-radius: var(--r-md);
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition-slow);
+            box-shadow: var(--shadow-1);
+        }
+        
+        .btn:hover {
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-1px);
+        }
+        
+        .btn-primary {
+            background: rgba(111, 143, 106, 0.15);
+            border-color: rgba(111, 143, 106, 0.3);
+            color: var(--ink);
+        }
+        
+        .btn-primary:hover {
+            background: rgba(111, 143, 106, 0.22);
+        }
+        
+        .btn-quiet {
+            background: rgba(255, 255, 255, 0.4);
+        }
+        
+        /* Pills - proof strip */
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            box-shadow: var(--shadow-1);
+        }
+        
+        .pills-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        /* Lists */
+        .checklist {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            gap: 12px;
+        }
+        
+        .checklist li {
+            position: relative;
+            padding-left: 28px;
+            line-height: 1.5;
+        }
+        
+        .checklist li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 6px;
+            width: 16px;
+            height: 16px;
+            background: var(--mango-yellow);
+            opacity: 0.3;
+            border-radius: 4px;
+            border: 1px solid var(--line);
+        }
+        
+        /* Icon Badge */
+        .icon-badge {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--r-md);
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.6);
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+            box-shadow: var(--shadow-1);
+        }
+        
+        .icon-badge svg {
+            width: 20px;
+            height: 20px;
+            color: var(--ink);
+            opacity: 0.85;
+        }
+        
+        /* =========================================
+           BLOCK SPECIFIC STYLES
+           ========================================= */
+        
+        /* Block 1: Hero */
+        .hero-grid {
+            display: grid;
+            gap: 3rem;
+            align-items: start;
+        }
+        
+        @media (min-width: 1024px) {
+            .hero-grid { grid-template-columns: 7fr 5fr; }
+        }
+        
+        .system-snapshot {
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: var(--base-2);
+            border: 1px solid var(--line);
+            border-radius: var(--r-lg);
+            padding: 2rem;
+            display: grid;
+            place-items: center;
+            box-shadow: var(--shadow-1);
+        }
+        
+        .snapshot-diagram {
+            width: 100%;
+            max-width: 320px;
+        }
+        
+        .snapshot-step {
+            text-align: center;
+            padding: 12px;
+            background: rgba(255,255,255,0.7);
+            border: 1px solid var(--line);
+            border-radius: var(--r-sm);
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            position: relative;
+        }
+        
+        .snapshot-step::after {
+            content: "↓";
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--ink-2);
+            font-size: 12px;
+        }
+        
+        .snapshot-step:last-child::after { display: none; }
+        
+        /* Block 2: Proof Strip */
+        .proof-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+        }
+        
+        /* Block 3: TL;DR Cards */
+        .tldr-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+        
+        @media (min-width: 768px) {
+            .tldr-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        
+        .tldr-card {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .tldr-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--ink-2);
+            font-weight: 500;
+        }
+        
+        /* Block 4: Risk Grid */
+        .risk-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+        }
+        
+        .risk-tile {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid var(--line);
+            border-radius: var(--r-md);
+            text-align: center;
+            box-shadow: var(--shadow-1);
+        }
+        
+        .risk-label {
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .risk-example {
+            font-size: 12px;
+            color: var(--ink-2);
+            line-height: 1.4;
+        }
+        
+        /* Block 5: Scope */
+        .scope-grid {
+            display: grid;
+            gap: 3rem;
+        }
+        
+        @media (min-width: 768px) {
+            .scope-grid { grid-template-columns: 1fr 1fr; }
+        }
+        
+        .scope-col h3 {
+            font-size: 16px;
+            margin-bottom: 1rem;
+            color: var(--ink);
+        }
+        
+        /* Block 6: Operating Model */
+        .model-diagram {
+            width: 100%;
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid var(--line);
+            border-radius: var(--r-lg);
+        }
+        
+        .flow-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .flow-box {
+            padding: 16px 24px;
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid var(--line);
+            border-radius: var(--r-sm);
+            font-size: 14px;
+            font-weight: 500;
+            text-align: center;
+            box-shadow: var(--shadow-1);
+        }
+        
+        .flow-arrow {
+            color: var(--ink-2);
+            font-size: 20px;
+        }
+        
+        /* Block 7: Accordion */
+        .accordion {
+            border: 1px solid var(--line);
+            border-radius: var(--r-lg);
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.4);
+        }
+        
+        .accordion-item {
+            border-bottom: 1px solid var(--line);
+        }
+        
+        .accordion-item:last-child { border-bottom: none; }
+        
+        .accordion-header {
+            width: 100%;
+            padding: 20px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            text-align: left;
+            font-family: inherit;
+            color: var(--ink);
+            transition: background 0.2s;
+        }
+        
+        .accordion-header:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .accordion-icon {
+            width: 20px;
+            height: 20px;
+            transition: transform 0.3s;
+        }
+        
+        .accordion-item.active .accordion-icon {
+            transform: rotate(180deg);
+        }
+        
+        .accordion-panel {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .accordion-item.active .accordion-panel {
+            max-height: 600px;
+        }
+        
+        .accordion-content {
+            padding: 0 24px 24px;
+        }
+        
+        .swimlane-preview {
+            width: 100%;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid var(--line);
+            border-radius: var(--r-sm);
+            margin: 1rem 0;
+            display: grid;
+            place-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Block 8: Timeline */
+        .timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+        
+        @media (min-width: 768px) {
+            .timeline {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+        }
+        
+        .timeline-step {
+            position: relative;
+            padding: 1.5rem;
+            flex: 1;
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid var(--line);
+            margin-bottom: -1px;
+        }
+        
+        @media (min-width: 768px) {
+            .timeline-step {
+                margin-bottom: 0;
+                margin-right: -1px;
+            }
+        }
+        
+        .timeline-step:first-child { border-radius: var(--r-lg) var(--r-lg) 0 0; }
+        .timeline-step:last-child { border-radius: 0 0 var(--r-lg) var(--r-lg); }
+        
+        @media (min-width: 768px) {
+            .timeline-step:first-child { border-radius: var(--r-lg) 0 0 var(--r-lg); }
+            .timeline-step:last-child { border-radius: 0 var(--r-lg) var(--r-lg) 0; }
+        }
+        
+        .week-label {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--mango-green);
+            margin-bottom: 8px;
+        }
+        
+        .gate-title {
+            font-weight: 500;
+            margin-bottom: 4px;
+            font-size: 15px;
+        }
+        
+        .gate-desc {
+            font-size: 13px;
+            color: var(--ink-2);
+            line-height: 1.4;
+        }
+        
+        /* Block 9: Dashboard Tiles */
+        .tiles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .dash-tile {
+            padding: 24px;
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid var(--line);
+            border-radius: var(--r-md);
+            box-shadow: var(--shadow-1);
+        }
+        
+        .tile-role {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+            color: var(--ink);
+        }
+        
+        .tile-content {
+            font-size: 14px;
+            color: var(--ink-2);
+            line-height: 1.5;
+        }
+        
+        /* Block 10: Risk Mechanics */
+        .mechanics-grid {
+            display: grid;
+            gap: 3rem;
+        }
+        
+        @media (min-width: 768px) {
+            .mechanics-grid { grid-template-columns: 1fr 1fr; }
+        }
+        
+        /* Block 11: Adoption */
+        .principle-stack {
+            display: grid;
+            gap: 1.5rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .principle-card {
+            display: flex;
+            gap: 1.5rem;
+            align-items: flex-start;
+            padding: 24px;
+        }
+        
+        .principle-num {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            background: var(--mango-yellow);
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            font-size: 14px;
+            flex-shrink: 0;
+            opacity: 0.8;
+        }
+        
+        /* Block 12: Results */
+        .outcomes-list {
+            margin-bottom: 3rem;
+        }
+        
+        .outcome-item {
+            padding: 1.5rem 0;
+            border-bottom: 1px solid var(--line);
+            font-size: 18px;
+            font-weight: 500;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .metric-card {
+            padding: 20px;
+        }
+        
+        .metric-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--ink-2);
+            margin-bottom: 4px;
+        }
+        
+        .metric-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--ink);
+        }
+        
+        /* Block 13: Handoff */
+        .handoff-grid {
+            display: grid;
+            gap: 2rem;
+            grid-template-columns: 1fr;
+        }
+        
+        @media (min-width: 768px) {
+            .handoff-grid { grid-template-columns: 2fr 1fr; }
+        }
+        
+        .handoff-callout {
+            background: var(--tint-green);
+            border: 1px solid rgba(111, 143, 106, 0.2);
+        }
+        
+        /* Block 14: Artifact Gallery */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .artifact-thumb {
+            aspect-ratio: 4/3;
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid var(--line);
+            border-radius: var(--r-md);
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            transition: var(--transition-slow);
+            box-shadow: var(--shadow-1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .artifact-thumb:hover {
+            box-shadow: var(--shadow-hover);
+        }
+        
+        .artifact-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.9);
+            border-top: 1px solid var(--line);
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        /* Block 15: Final CTA */
+        .cta-box {
+            padding: 48px;
+            text-align: center;
+        }
+        
+        @media (min-width: 768px) {
+            .cta-box {
+                text-align: left;
+                display: grid;
+                grid-template-columns: 2fr 1fr;
+                gap: 3rem;
+                align-items: center;
+            }
+        }
+        
+        /* Block 16: FAQ */
+        .faq-list {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .faq-item {
+            border-bottom: 1px solid var(--line);
+        }
+        
+        .faq-question {
+            width: 100%;
+            padding: 20px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: transparent;
+            border: none;
+            font-size: 16px;
+            font-weight: 500;
+            text-align: left;
+            cursor: pointer;
+            font-family: inherit;
+            color: var(--ink);
+        }
+        
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .faq-item.active .faq-answer {
+            max-height: 300px;
+            padding-bottom: 20px;
+        }
+        
+        /* Lightbox */
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(31, 37, 40, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            place-items: center;
+            padding: 2rem;
+        }
+        
+        .lightbox.active { display: grid; }
+        
+        .lightbox-content {
+            background: var(--base);
+            border-radius: var(--r-lg);
+            max-width: 900px;
+            width: 100%;
+            max-height: 80vh;
+            overflow: auto;
+            position: relative;
+        }
+        
+        .lightbox-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.9);
+            border: 1px solid var(--line);
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            font-size: 20px;
+            z-index: 10;
+        }
+        
+        /* Skip link */
+        .skip-link {
+            position: absolute;
+            left: -999px;
+            background: var(--base);
+            padding: 10px 16px;
+            border: 1px solid var(--line);
+            border-radius: var(--r-sm);
+            z-index: 1001;
+        }
+        
+        .skip-link:focus { left: 16px; top: 16px; }
+        
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            * { transition: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<a href="#main" class="skip-link">Skip to content</a>
+
+<main id="main">
+
+    <!-- BLOCK 1: Hero -->
+    <section class="section section-neutral" aria-labelledby="hero-heading">
+        <div class="container">
+            <div class="hero-grid">
+                <div>
+                    <p class="eyebrow">Case Study — 90-Day Implementation</p>
+                    <h1 class="h1" style="margin-top: 1rem;" id="hero-heading">
+                        Disciplined delivery—without bureaucracy.
+                    </h1>
+                    <p class="text-lg text-ink-2" style="margin-top: 1.5rem; max-width: 60ch;">
+                        I install a lightweight sprint-based execution system for high-stakes, multi-workstream teams—so priorities stay clear, risks surface early, and the system runs without a hero PM by Day 90.
+                    </p>
+                    <div style="margin-top: 2rem; display: flex; flex-wrap: wrap; gap: 12px;">
+                        <a href="#contact" class="btn btn-primary">Book a call</a>
+                        <a href="#results" class="btn btn-quiet">See outcomes</a>
+                    </div>
+                </div>
+                
+                <div class="system-snapshot" role="img" aria-label="System Snapshot diagram showing progression from Cadence to Artifacts to Dashboards to Decisions with Day 90 handoff highlighted">
+                    <div class="snapshot-diagram">
+                        <div class="snapshot-step">Cadence</div>
+                        <div class="snapshot-step">Artifacts</div>
+                        <div class="snapshot-step">Dashboards</div>
+                        <div class="snapshot-step" style="background: rgba(216, 199, 119, 0.3); border-color: var(--mango-yellow);">
+                            Decisions / Handoff<br>
+                            <span style="font-size: 11px; color: var(--ink-2);">Day 90: team runs it</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BLOCK 2: Proof Strip -->
+    <section class="section section-tint" aria-label="Key constraints and outcomes">
+        <div class="container">
+            <div class="proof-strip">
+                <span class="pill">Day 90 handoff-ready</span>
+                <span class="pill">High visibility, low overhead</span>
+                <span class="pill">Risks + dependencies surfaced early</span>
+                <span class="pill">Predictable sprint cadence</span>
+                <span class="pill">Designed for fractional roles</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- BLOCK 3: TL;DR Cards -->
+    <section class="section section-neutral" id="context">
+        <div class="container">
+            <div class="tldr-grid">
+                <article class="card tldr-card">
+                    <div class="tldr-label">Situation</div>
+                    <h3 class="h3">High-stakes delivery under constraint</h3>
+                    <p class="text-base text-ink-2">
+                        Compliance-heavy delivery, multiple workstreams, and limited bandwidth. "If it's not documented to standard, it didn't happen."
+                    </p>
+                </article>
+                
+                <article class="card tldr-card">
+                    <div class="tldr-label">Approach</div>
+                    <h3 class="h3">Install cadence + visibility</h3>
+                    <p class="text-base text-ink-2">
+                        Translate deliverables into workstreams, install sprint cadence, stand up a single source of truth, and define pivot triggers + escalation lanes.
+                    </p>
+                </article>
+                
+                <article class="card tldr-card">
+                    <div class="tldr-label">Results</div>
+                    <h3 class="h3">Adoption + operational continuity</h3>
+                    <p class="text-base text-ink-2">
+                        Cadence running reliably, dashboard updated by owners (not PM), predictable gates through Day 90, and an operating manual + templates for handoff.
+                    </p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- BLOCK 4: What Was at Stake -->
+    <section class="section section-neutral" aria-labelledby="stake-heading">
+        <div class="container">
+            <div class="grid gap-8" style="grid-template-columns: 1fr;">
+                <div style="max-width: 65ch;">
+                    <h2 class="h2" id="stake-heading">What was at stake</h2>
+                    <p class="text-lg text-ink-2" style="margin-top: 1rem;">
+                        In compliance-heavy human services delivery, execution isn't just shipping work—it's protecting funding, safety, and trust. Work happens across sites with uneven capacity, and the proof of delivery is documentation quality.
+                    </p>
+                    <p class="text-base text-ink-2" style="margin-top: 1rem;">
+                        When reporting is late or inconsistent, it becomes an operational risk: audits, corrective actions, delayed reimbursement, and avoidable client harm. The system had to increase coordination and visibility without adding process weight.
+                    </p>
+                </div>
+                
+                <div class="risk-grid" role="list" aria-label="Risk categories">
+                    <div class="risk-tile" role="listitem">
+                        <div class="risk-label">Funding</div>
+                        <div class="risk-example">Reimbursement delays</div>
+                    </div>
+                    <div class="risk-tile" role="listitem">
+                        <div class="risk-label">Safety</div>
+                        <div class="risk-example">Client harm exposure</div>
+                    </div>
+                    <div class="risk-tile" role="listitem">
+                        <div class="risk-label">Compliance</div>
+                        <div class="risk-example">Audit deficiencies</div>
+                    </div>
+                    <div class="risk-tile" role="listitem">
+                        <div class="risk-label">Workforce</div>
+                        <div class="risk-example">Uneven site capacity</div>
+                    </div>
+                    <div class="risk-tile" role="listitem">
+                        <div class="risk-label">Documentation</div>
+                        <div class="risk-example">Proof-of-service gaps</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BLOCK 5: Scope Boundaries -->
+    <section class="section section-tint" aria-labelledby="scope-heading">
+        <div class="container">
+            <h2 class="h2" style="text-align: center; margin-bottom: 3rem;" id="scope-heading">Scope boundaries</h2>
+            
+            <div class="scope-grid">
+                <div class="scope-col">
+                    <div class="icon-badge" style="margin-bottom: 1rem;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
+                    <h3>Will do</h3>
+                    <ul class="checklist" style="margin-top: 1.5rem;">
+                        <li>Translate deliverables into an executable workstream map</li>
+                        <li>Install sprint cadence + facilitation notes</li>
+                        <li>Stand up dashboard v1 as single source of truth</li>
+                        <li>Define escalation lanes + pivot triggers</li>
+                        <li>Train internal owners for Day 90 handoff</li>
+                    </ul>
+                </div>
+                
+                <div class="scope-col">
+                    <div class="icon-badge" style="margin-bottom: 1rem; opacity: 0.6;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </div>
+                    <h3>Will not do</h3>
+                    <ul class="checklist" style="margin-top: 1.5rem;">
+                        <li>Build a heavy PMO or reporting machine</li>
+                        <li>Add tools nobody will maintain</li>
+                        <li>Create metrics that require constant admin</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BLOCK 6: Operating Model (Gradient) -->
+    <section class="section section-gradient-gy" aria-labelledby="model-heading">
+        <div class="container" style="text-align: center;">
+            <h2 class="h2" id="model-heading">The operating system</h2>
+            <p class="text-lg text-ink-2" style="margin: 1.5rem auto 0; max-width: 70ch;">
+                The execution system is a set of lightweight rituals, artifacts, and views that make it easy to commit to a manageable slice of work, review outcomes frequently, surface dependencies early, and pivot predictably at sprint boundaries.
+            </p>
+            <p class="text-base text-ink-2" style="margin-top: 1rem; font-style: italic;">
+                It's designed to run without a central hero PM—because continuity matters more than individual brilliance.
+            </p>
+            
+            <div class="model-diagram" aria-label="Operating Model Diagram showing flow from Cadence layer through Artifacts to Dashboard Views to Decisions and Handoff">
+                <div class="flow-row">
+                    <div class="flow-box">Cadence Layer</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-box">Artifact Layer</div>
+                </div>
+                <div class="flow-row">
+                    <div class="flow-box">Dashboard Views</div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-box">Decisions & Handoff</div>
+                </div>
+                <div style="margin-top: 1.5rem; font-size: 13px; color: var(--ink-2); display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
+                    <span>Examples: RAID logs</span>
+                    <span>Decision registers</span>
+                    <span>Change control</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BLOCK 7: Workstreams Inventory -->
+    <section class="section section-neutral" aria-labelledby="workstreams-heading">
+        <div class="container">
+            <h2 class="h2" id="workstreams-heading">Workstream inventory</h2>
+            <p class="text-base text-ink-2" style="margin-top: 1rem; max-width: 70ch;">
+                Here's the workstream inventory the system is designed to hold—each with clear ownership, dependencies, and the cadence touchpoints where risks and tradeoffs get handled. Expand one at a time; view full swimlane if you want the detail.
+            </p>
+            
+            <div class="accordion" style="margin-top: 2.5rem;" role="region" aria-label="Workstream details">
+                
+                <div class="accordion-item" data-workstream="1">
+                    <button class="accordion-header" aria-expanded="false">
+                        <span>1. Service Delivery — from intake to follow-up</span>
+                        <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <div class="accordion-panel">
+                        <div class="accordion-content">
+                            <p style="margin-bottom: 1rem;"><strong>What good looks like:</strong> Smooth handoffs between intake, eligibility, and active case management with documentation captured at each step.</p>
+                            <ul style="margin-bottom: 1.5rem; padding-left: 1.2rem; color: var(--ink-2);">
+                                <li><strong>Cadence:</strong> Daily standups, weekly intake review</li>
+                                <li><strong>Dependencies:</strong> Eligibility rules, capacity signals</li>
+                                <li><strong>Pivot triggers:</strong> Backlog >5 days, capacity shifts</li>
+                            </ul>
+                            <div class="swimlane-preview" role="img" aria-label="Swimlane diagram for Service Delivery">
+                                <svg width="400" height="160" viewBox="0 0 400 160">
+                                    <rect x="10" y="10" width="80" height="30" fill="white" stroke="#999" rx="4"/>
+                                    <text x="50" y="30" text-anchor="middle" font-size="11">Intake</text>
+                                    <line x1="90" y1="25" x2="130" y2="25" stroke="#666" marker-end="url(#arrow)"/>
+                                    
+                                    <rect x="130" y="10" width="80" height="30" fill="white" stroke="#999" rx="4"/>
+                                    <text x="170" y="30" text-anchor="middle" font-size="11">Eligibility</text>
+                                    <line x1="210" y1="25" x2="250" y2="25" stroke="#666"/>
+                                    
+                                    <rect x="250" y="10" width="100" height="30" fill="white" stroke="#999" rx="4"/>
+                                    <text x="300" y="30" text-anchor="middle" font-size="11">Enrollment</text>
+                                    
+                                    <rect x="10" y="60" width="380" height="80" fill="rgba(255,255,255,0.3)" stroke="#ccc" rx="4"/>
+                                    <text x="200" y="100" text-anchor="middle" font-size="12" fill="#666">Roles: Program Director, Site Lead, Case Manager</text>
+                                    
+                                    <defs>
+                                        <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                            <path d="M 0 0 L 10 5 L 0 10 z" fill="#666"/>
+                                        </marker>
+                                    </defs>
+                                </svg>
+                            </div>
+                            <button class="btn btn-quiet view-full-btn" data-diagram="1">View full diagram</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item" data-workstream="2">
+                    <button class="accordion-header" aria-expanded="false">
+                        <span>2. Case Management + Documentation — "proof of service" pipeline</span>
+                        <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <div class="accordion-panel">
+                        <div class="accordion-content">
+                            <p style="margin-bottom: 1rem;"><strong>What good looks like:</strong> Complete documentation packages ready for audit at any time, with QA pass rates >95%.</p>
+                            <ul style="margin-bottom: 1.5rem; padding-left: 1.2rem; color: var(--ink-2);">
+                                <li><strong>Cadence:</strong> Weekly QA sampling, monthly audit prep</li>
+                                <li><strong>Dependencies:</strong> Case notes, billing validation</li>
+                                <li><strong>Pivot triggers:</strong> QA failures >10%, missing signatures</li>
+                            </ul>
+                            <div class="swimlane-preview" role="img" aria-label="Swimlane diagram for Case Management">
+                                <svg width="400" height="120" viewBox="0 0 400 120">
+                                    <rect x="10" y="10" width="120" height="30" fill="white" stroke="#999" rx="4"/>
+                                    <text x="70" y="30" text-anchor="middle" font-size="11">Case Notes</text>
+                                    <line x1="130" y1="25" x2="170" y2="25" stroke="#666"/>
+                                    <rect x="170" y="10" width="100" height="30" fill="white" stroke="#999" rx="4"/>
+                                    <text x="220" y="30" text-anchor="middle" font-size="11">QA Review</text>
+                                    <rect x="10" y="60" width="380" height="40" fill="rgba(111,143,106,0.1)" stroke="#ccc" rx="4"/>
+                                    <text x="200" y="85" text-anchor="middle" font-size="12" fill="#666">Compliance/QA swimlane</text>
+                                </svg>
+                            </div>
+                            <button class="btn btn-quiet view-full-btn" data-diagram="2">View full diagram</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item" data-workstream="3">
+                    <button class="accordion-header" aria-expanded="false">
+                        <span>3. Compliance / QA — definition-of-done + audit readiness</span>
+                        <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <div class="accordion-panel">
+                        <div class="accordion-content">
+                            <p style="margin-bottom: 1rem;"><strong>What good looks like:</strong> Real-time visibility into compliance posture with automated flagging of at-risk cases.</p>
+                            <ul style="margin-bottom: 1.5rem; padding-left: 1.2rem; color: var(--ink-2);">
+                                <li><strong>Cadence:</strong> Weekly metrics review, quarterly deep audit</li>
+                                <li><strong>Dependencies:</strong> Documentation, training records</li>
+                                <li><strong>Pivot triggers:</strong> CAPA initiation, regulatory changes</li>
+                            </ul>
+                            <button class="btn btn-quiet view-full-btn" data-diagram="3">View full diagram</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item" data-workstream="4">
+                    <button class="accordion-header" aria-expanded="false">
+                        <span>4. Workforce Scheduling — coverage + capacity reality</span>
+                        <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <div class="accordion-panel">
+                        <div class="accordion-content">
+                            <p style="margin-bottom: 1rem;"><strong>What good looks like:</strong> Schedules that account for actual availability, credentialing status, and site needs.</p>
+                            <ul style="margin-bottom: 1.5rem; padding-left: 1.2rem; color: var(--ink-2);">
+                                <li><strong>Cadence:</strong> Bi-weekly scheduling, daily coverage checks</li>
+                                <li><strong>Dependencies:</strong> Credentialing, PTO requests</li>
+                                <li><strong>Pivot triggers:</strong> Callouts exceeding 10%, credential gaps</li>
+                            </ul>
+                            <button class="btn btn-quiet view-full-btn" data-diagram="4">View full diagram</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item" data-workstream="5">
+                    <button class="accordion-header" aria-expanded="false">
+                        <span>5. Data Reporting — contract and operational intelligence</span>
+                        <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <div class="accordion-panel">
+                        <div class="accordion-content">
+                            <p style="margin-bottom: 1rem;"><strong>What good looks like:</strong> Automated pipelines delivering accurate counts to funders without manual reconciliation.</p>
+                            <ul style="margin-bottom: 1.5rem; padding-left: 1.2rem; color: var(--ink-2);">
+                                <li><strong>Cadence:</strong> Weekly operational reports, monthly funder reports</li>
+                                <li><strong>Dependencies:</strong> Service delivery logs, enrollment data</li>
+                                <li><strong>Pivot triggers:</strong> Data quality errors, SLA breaches</li>
+                            </ul>
+                            <button class="btn btn-quiet view-full-btn" data-diagram="5">View full diagram</button>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </section>
+
+    <!-- BLOCK 8: Cadence Timeline (Gradient) -->
+    <section class="section section-gradient-gy" aria-labelledby="timeline-heading">
+        <div class="container">
+            <h2 class="h2" style="text-align: center; margin-bottom: 3rem;" id="timeline-heading">Cadence + Gates Timeline (Weeks 1–12)</h2>
+            
+            <div class="timeline" role="list">
+                <div class="timeline-step" role="listitem">
+                    <div class="week-label">Week 1</div>
+                    <div class="gate-title">Translation Readout</div>
+                    <div class="gate-desc">Workstreams, milestones, ownership, decision rights confirmed.</div>
+                </div>
+                
+                <div class="timeline-step" role="listitem">
+                    <div class="week-label">Week 2</div>
+                    <div class="gate-title">Sprint 1 Review</div>
+                    <div class="gate-desc">Commitments realistic; dashboard usable and updated.</div>
+                </div>
+                
+                <div class="timeline-step" role="listitem">
+                    <div class="week-label">Week 4</div>
+                    <div class="gate-title">System Live</div>
+                    <div class="gate-desc">Cadence stable; visibility real; first meaningful deliverable shipped.</div>
+                </div>
+                
+                <div class="timeline-step" role="listitem">
+                    <div class="week-label">Week 6</div>
+                    <div class="gate-title">Resource Reality Check</div>
+                    <div class="gate-desc">Capacity vs scope quantified; tradeoffs documented.</div>
+                </div>
+                
+                <div class="timeline-step" role="listitem">
+                    <div class="week-label">Week 8</div>
+                    <div class="gate-title">Re-sequencing Decision</div>
+                    <div class="gate-desc">Critical path reset based on learning + constraints.</div>
+                </div>
+                
+                <div class="timeline-step" role="listitem">
+                    <div class="week-label">Week 10</div>
+                    <div class="gate-title">Handoff Simulation</div>
+                    <div class="gate-desc">Internal lead runs a full cycle; PM observes.</div>
+                </div>
+                
+                <div class="timeline-step" role="listitem">
+                    <div class="week-label">Week 12</div>
+                    <div class="gate-title">Transition Sign-off</div>
+                    <div class="gate-desc">Day 90: Owners run cadence; next-quarter plan re-baselined.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BLOCK 9: Dashboards -->
+    <section class="section section-tint" aria-labelledby="dashboards-heading">
+        <div class="container">
+            <h2 class="h2" id="dashboards-heading">Dashboards for situational awareness</h2>
+            <p class="text-base text-ink-2" style="margin-top: 1rem; max-width: 70ch; margin-bottom: 3rem;">
+                Dashboards aren't a reporting layer—they're how the team stays coordinated without extra meetings. The baseline system includes a single source of truth plus audience views so each role can see what's committed, what's at risk, and what decisions are pending.
+            </p>
+            
+            <div class="tiles-grid">
+                <div class="dash-tile">
+                    <div class="tile-role">Program Director</div>
+                    <div class="tile-content">Milestones, risk posture, decisions needed</div>
+                </div>
+                
+                <div class="dash-tile">
+                    <div class="tile-role">Site Leads</div>
+                    <div class="tile-content">Coverage, blockers, documentation backlog</div>
+                </div>
+                
+                <div class="dash-tile">
+                    <div class="tile-role">Compliance / QA</div>
+                    <div class="tile-content">Definition-of-done, QA pass rate, CAPAs</div>
+                </div>
+                
+                <div class="dash-tile">
+                    <div class="tile-role">Finance</div>
+                    <div class="tile-content">Approvals, spend, billing readiness</div>
+                </div>
+                
+                <div class="dash-tile">
+                    <div class="tile-role">HR / People Ops</div>
+                    <div class="tile-content">Staffing pipeline, credentialing blockers</div>
+                </div>
+                
+                <div class="dash-tile">
+                    <div class="tile-role">IT / Data</div>
+                    <div class="tile-content">Uptime, data completeness, reporting pipeline</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BLOCK 10: Risk Mechanics -->
+    <section class="section section-neutral" aria-labelledby="risk-mechanics-heading">
+        <div class="container">
+            <h2 class="h2" id="risk-mechanics-heading">Dependency + risk mechanics</h2>
+            <p class="text-base text-ink-2" style="margin-top: 1rem; max-width: 70ch; margin-bottom: 2rem;">
+                The system assumes change is normal—but it shouldn't be chaotic. Pivots happen at sprint boundaries unless a risk trigger requires immediate escalation. When dependencies slip or decisions stall, we surface the tradeoff early and document the decision so teams don't relive the same debate every sprint.
+            </p>
+            
+            <div class="mechanics-grid">
+                <div>
+                    <h3 class="h3" style="margin-bottom: 1.5rem;">Pivot triggers</h3>
+                    <div class="card card-quiet">
+                        <ul class="checklist">
+                            <li>Dependency slips by &gt;1 sprint</li>
+                            <li>Critical decisions exceed 7 days</li>
+                            <li>Capacity changes materially</li>
+                            <li>External context shifts</li>
+                            <li>Safety/legal/funding risk trigger hit</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="h3" style="margin-bottom: 1.5rem;">Escalation ladder</h3>
+                    <div class="card card-quiet">
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <div style="padding: 12px; background: rgba(255,255,255,0.6); border: 1px solid var(--line); border-radius: var(--r-sm);">
+                                <strong>Workstream Owner</strong><br>
+                                <span style="font-size: 13px; color: var(--ink-2);">First line, 24hr resolution</span>
+                            </div>
+                            <div style="text-align: center; color: var(--ink-2);">↓</div>
+                            <div style="padding: 12px; background: rgba(255,255,255,0.6); border: 1px solid var(--line); border-radius: var(--r-sm);">
+                                <strong>Sponsor Checkpoint</strong><br>
+                                <span style="font-size: 13px; color: var(--ink-2);">Scope tradeoff authority</span>
+                            </div>
+                            <div style="text-align: center; color: var(--ink-2);">↓</div>
+                            <div style="padding: 12px; background: rgba(255,255,255,0.4); border: 1px solid var(--line); border-radius: var(--r-sm); opacity: 0.8;">
+                                <strong>Scope / Resource Reset</strong><br>
+                                <span style="font-size: 13px; color: var(--ink-2);">Program-level re-baseline</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BLOCK 11: Adoption Mechanics -->
+    <section class="section section-gradient-yo" aria-labelledby="adoption-heading">
+        <div class="container">
+            <h2 class="h2" style="text-align: center; margin-bottom: 3rem;" id="adoption-heading">Adoption mechanics</h2>
+            
+            <div class="principle-stack">
+                <div class="card principle-card">
+                    <div class="principle-num">1</div>
+                    <div>
+                        <h3 class="h3">Make it skimmable</h3>
+                        <p class="text-base text-ink-2" style="margin-top: 0.5rem;">
+                            Updates are structured so leaders can understand reality in minutes, not meetings.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="card principle-card">
+                    <div class="principle-num">2</div>
+                    <div>
+                        <h3 class="h3">Minimize data entry</h3>
+                        <p class="text-base text-ink-2" style="margin-top: 0.5rem;">
+                            If it can't be maintained by busy owners, it won't survive—so dashboards pull from existing systems wherever possible.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="card principle-card">
+                    <div class="principle-num" style="background: var(--mango-orange);">3</div>
+                    <div>
+                        <h3 class="h3">Design for fractional roles</h3>
+                        <p class="text-base text-ink-2" style="margin-top: 0.5rem;">
+                            People wear multiple hats, so roles, decision rights, and cadence touchpoints are explicit—not assumed.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BLOCK 12: Results (Gradient) -->
+    <section class="section section-gradient-gy" id="results" aria-labelledby="results-heading">
+        <div class="container">
+            <h2 class="h2" style="text-align: center;" id="results-heading">Results</h2>
+            
+            <div class="outcomes-list" style="max-width: 800px; margin: 3rem auto;">
+                <div class="outcome-item">Cadence running on schedule by Day 30, owned by internal leads by Day 90</div>
+                <div class="outcome-item">Dashboards reflecting reality (updated by owners, not PM)</div>
+                <div class="outcome-item">Risks and dependencies handled through clear escalation lanes</div>
+                <div class="outcome-item">Internal facilitators confident running the cycle without external support</div>
+            </div>
+            
+            <div class="metrics-grid">
+                <div class="card metric-card">
+                    <div class="metric-label">Decision latency (critical path)</div>
+                    <div class="metric-value">Reduced 60%</div>
+                </div>
+                <div class="card metric-card">
+                    <div class="metric-label">Blocked items aging</div>
+                    <div class="metric-value">&lt;3 days avg</div>
+                </div>
+                <div class="card metric-card">
+                    <div class="metric-label">Documentation QA pass rate</div>
+                    <div class="metric-value">96%</div>
+                </div>
+                <div class="card metric-card">
+                    <div class="metric-label">System uptime (adoption)</div>
+                    <div class="metric-value">Post-handoof: 100%</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BLOCK 13: Handoff Package -->
+    <section class="section section-neutral" aria-labelledby="handoff-heading">
+        <div class="container">
+            <h2 class="h2" id="handoff-heading">Handoff package</h2>
+            <p class="text-base text-ink-2" style="margin-top: 1rem; max-width: 70ch; margin-bottom: 3rem;">
+                The handoff isn't a document drop—it's a capability transfer. By Day 90, the team has a working manual, templates, and training recordings, and we run at least one handoff simulation where an internal lead facilitates the full cycle.
+            </p>
+            
+            <div class="handoff-grid">
+                <div class="card">
+                    <h3 class="h3" style="margin-bottom: 1.5rem;">What you own when I leave</h3>
+                    <ul class="checklist">
+                        <li>Operating manual (run cadence, maintain artifacts, escalate)</li>
+                        <li>Planning / review / retro templates</li>
+                        <li>RAID, decision log, change log templates</li>
+                        <li>Weekly brief format for leadership</li>
+                        <li>Facilitation + dashboard training recordings</li>
+                        <li>Handoff simulation + tuning notes</li>
+                    </ul>
+                </div>
+                
+                <div class="handoff-callout card" style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
+                    <div class="icon-badge" style="margin-bottom: 1rem;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    </div>
+                    <h3 class="h3">Capability transfer</h3>
+                    <p class="text-base text-ink-2" style="margin-top: 0.5rem;">
+                        Not just documents, but demonstrated competence. We run simulations until the team is confident.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BLOCK 14: Artifact Gallery -->
+    <section class="section section-neutral" aria-labelledby="artifacts-heading">
+        <div class="container">
+            <h2 class="h2" id="artifacts-heading">Artifact gallery</h2>
+            <p class="text-base text-ink-2" style="margin-top: 1rem; margin-bottom: 3rem;">
+                These are tools the team used, not portfolio decoration.
+            </p>
+            
+            <div class="gallery-grid">
+                <div class="artifact-thumb" tabindex="0" role="button" aria-label="View Milestone Map artifact">
+                    <div style="font-size: 48px; opacity: 0.3;">📋</div>
+                    <div class="artifact-label">Milestone Map + Acceptance Criteria</div>
+                </div>
+                
+                <div class="artifact-thumb" tabindex="0" role="button" aria-label="View Dashboard v1 artifact">
+                    <div style="font-size: 48px; opacity: 0.3;">📊</div>
+                    <div class="artifact-label">Dashboard v1</div>
+                </div>
+                
+                <div class="artifact-thumb" tabindex="0" role="button" aria-label="View RAID Map artifact">
+                    <div style="font-size: 48px; opacity: 0.3;">🗺️</div>
+                    <div class="artifact-label">RAID + Dependency Map</div>
+                </div>
+                
+                <div class="artifact-thumb" tabindex="0" role="button" aria-label="View Decision Log artifact">
+                    <div style="font-size: 48px; opacity: 0.3;">📝</div>
+                    <div class="artifact-label">Decision + Change Log</div>
+                </div>
+                
+                <div class="artifact-thumb" tabindex="0" role="button" aria-label="View Facilitation Notes artifact">
+                    <div style="font-size: 48px; opacity: 0.3;">🎙️</div>
+                    <div class="artifact-label">Facilitation Notes</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BLOCK 15: Final CTA -->
+    <section class="section section-neutral" id="contact" aria-labelledby="cta-heading">
+        <div class="container">
+            <div class="card cta-box">
+                <div>
+                    <h2 class="h2" id="cta-heading">Explore fit</h2>
+                    <p class="text-lg text-ink-2" style="margin-top: 1rem; max-width: 60ch;">
+                        If you're running multi-workstream ops under constraints, this install reduces chaos and survives turnover.
+                    </p>
+                    
+                    <div style="margin-top: 2rem;">
+                        <p class="text-sm font-500" style="margin-bottom: 1rem;">This is a fit if:</p>
+                        <ul style="display: grid; gap: 0.5rem; color: var(--ink-2); font-size: 14px;">
+                            <li>• Multiple workstreams, shared dependencies</li>
+                            <li>• Compliance / reporting pressure</li>
+                            <li>• Fractional roles and uneven capacity</li>
+                            <li>• Need a system that survives turnover</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 2rem;">
+                    <a href="mailto:contact@example.com" class="btn btn-primary" style="justify-content: center;">Book a call</a>
+                    <button class="btn btn-quiet" onclick="alert('PDF download would initiate here')" style="justify-content: center;">Download case study (PDF)</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BLOCK 16: FAQ -->
+    <section class="section section-tint" aria-labelledby="faq-heading">
+        <div class="container">
+            <h2 class="h2" style="text-align: center; margin-bottom: 3rem;" id="faq-heading">Common questions</h2>
+            
+            <div class="faq-list">
+                <div class="faq-item">
+                    <button class="faq-question" aria-expanded="false">
+                        <span>What does "lightweight" actually mean?</span>
+                        <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <div class="faq-answer">
+                        <p class="text-base text-ink-2">No heavy templates, no daily status meetings, no administrative overhead. The system uses tools you already have (Sheets, Notion, or Airtable) structured so they don't require a dedicated admin.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <button class="faq-question" aria-expanded="false">
+                        <span>What tools do you use?</span>
+                        <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <div class="faq-answer">
+                        <p class="text-base text-ink-2">Sheets, Notion, Airtable, or Asana—based on your constraints and what the team will actually maintain. The goal is adoption, not technology.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <button class="faq-question" aria-expanded="false">
+                        <span>How do you ensure adoption after you leave?</span>
+                        <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <div class="faq-answer">
+                        <p class="text-base text-ink-2">We train internal facilitators and run handoff simulations where they run a full sprint cycle while I observe. The operating manual and training recordings remain as reference.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <button class="faq-question" aria-expanded="false">
+                        <span>How do you handle confidentiality?</span>
+                        <svg class="accordion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <div class="faq-answer">
+                        <p class="text-base text-ink-2">All screenshots are redacted and anonymized. Process diagrams show structure without client data. We can work under NDA if required.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<!-- Lightbox Modal -->
+<div class="lightbox" id="diagram-lightbox" role="dialog" aria-modal="true" aria-label="Full workstream diagram">
+    <div class="lightbox-content" style="padding: 3rem;">
+        <button class="lightbox-close" onclick="closeLightbox()" aria-label="Close diagram">×</button>
+        <h3 class="h3" id="lightbox-title">Workstream Diagram</h3>
+        <div id="lightbox-body" style="margin-top: 2rem; min-height: 400px; display: grid; place-items: center; background: rgba(255,255,255,0.5); border: 1px dashed var(--line); border-radius: var(--r-md);">
+            <p class="text-ink-2">Full SVG swimlane diagram would load here</p>
+        </div>
+        <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(111, 143, 106, 0.1); border-radius: var(--r-sm);">
+            <p class="text-sm"><strong>Note:</strong> In the full implementation, this would be a draggable/zoomable SVG showing roles across the top (Program Director, Site Lead, Compliance/QA, Finance, HR, IT/Data) and flow from intake → execution → documentation → QA → reporting.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Accordion functionality (single-open enforcement)
+    const accordionItems = document.querySelectorAll('.accordion-item');
+    
+    accordionItems.forEach(item => {
+        const header = item.querySelector('.accordion-header');
+        header.addEventListener('click', () => {
+            const isActive = item.classList.contains('active');
+            
+            // Close all others
+            accordionItems.forEach(other => {
+                if (other !== item) {
+                    other.classList.remove('active');
+                    other.querySelector('.accordion-header').setAttribute('aria-expanded', 'false');
+                }
+            });
+            
+            // Toggle current
+            item.classList.toggle('active');
+            header.setAttribute('aria-expanded', !isActive);
+        });
+    });
+    
+    // FAQ Accordion
+    const faqItems = document.querySelectorAll('.faq-item');
+    
+    faqItems.forEach(item => {
+        const question = item.querySelector('.faq-question');
+        question.addEventListener('click', () => {
+            const isActive = item.classList.contains('active');
+            
+            // Close all others (remove for multi-open)
+            faqItems.forEach(other => {
+                if (other !== item) {
+                    other.classList.remove('active');
+                    other.querySelector('.faq-question').setAttribute('aria-expanded', 'false');
+                }
+            });
+            
+            item.classList.toggle('active');
+            question.setAttribute('aria-expanded', !isActive);
+        });
+    });
+    
+    // Lightbox functionality
+    const lightbox = document.getElementById('diagram-lightbox');
+    const viewFullBtns = document.querySelectorAll('.view-full-btn');
+    
+    viewFullBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const diagramId = e.target.getAttribute('data-diagram');
+            const workstreamTitle = e.target.closest('.accordion-content').querySelector('p strong').textContent;
+            
+            document.getElementById('lightbox-title').textContent = `Full Swimlane: ${workstreamTitle}`;
+            lightbox.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            // Remember scroll position
+            lightbox.dataset.scrollY = window.scrollY;
+        });
+    });
+    
+    function closeLightbox() {
+        lightbox.classList.remove('active');
+        document.body.style.overflow = '';
+        
+        // Return to scroll position
+        if (lightbox.dataset.scrollY) {
+            window.scrollTo(0, parseInt(lightbox.dataset.scrollY));
+        }
+    }
+    
+    // Close on backdrop click
+    lightbox.addEventListener('click', (e) => {
+        if (e.target === lightbox) closeLightbox();
+    });
+    
+    // Close on Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && lightbox.classList.contains('active')) {
+            closeLightbox();
+        }
+    });
+    
+    // Artifact thumbnails placeholder
+    document.querySelectorAll('.artifact-thumb').forEach(thumb => {
+        thumb.addEventListener('click', () => {
+            alert('Artifact lightbox would open here with redacted screenshot');
+        });
+        thumb.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                alert('Artifact lightbox would open here with redacted screenshot');
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
