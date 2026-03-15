@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Upwork Automation Demand Intelligence</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-sankey/0.12.3/d3-sankey.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0e17;
+  --surface: #111827;
+  --surface2: #1a2236;
+  --border: #1e293b;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --accent1: #38bdf8;
+  --accent2: #a78bfa;
+  --accent3: #34d399;
+  --accent4: #fb923c;
+  --accent5: #f472b6;
+  --accent6: #facc15;
+  --gradient1: linear-gradient(135deg, #38bdf8, #a78bfa);
+  --gradient2: linear-gradient(135deg, #34d399, #38bdf8);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+.noise-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 0;
+}
+
+.container { max-width: 1400px; margin: 0 auto; padding: 2rem; position: relative; z-index: 1; }
+
+header {
+  text-align: center;
+  padding: 3rem 0 2rem;
+  position: relative;
+}
+
+header::before {
+  content: '';
+  position: absolute;
+  top: -100px; left: 50%; transform: translateX(-50%);
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(56,189,248,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+h1 {
+  font-family: 'Space Mono', monospace;
+  font-size: 2.4rem;
+  font-weight: 700;
+  background: var(--gradient1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -1px;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  font-size: 1.05rem;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+/* KPI Cards */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin: 2rem 0 3rem;
+}
+
+.kpi-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.2rem 1.4rem;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s, border-color 0.3s;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent1);
+}
+
+.kpi-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 3px;
+  border-radius: 12px 12px 0 0;
+}
+
+.kpi-card:nth-child(1)::after { background: var(--accent1); }
+.kpi-card:nth-child(2)::after { background: var(--accent2); }
+.kpi-card:nth-child(3)::after { background: var(--accent3); }
+.kpi-card:nth-child(4)::after { background: var(--accent4); }
+.kpi-card:nth-child(5)::after { background: var(--accent5); }
+
+.kpi-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 500;
+}
+
+.kpi-value {
+  font-family: 'Space Mono', monospace;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0.3rem 0;
+}
+
+.kpi-detail { font-size: 0.8rem; color: var(--text-muted); }
+
+/* Chart sections */
+.chart-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.chart-section::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent1), transparent);
+  opacity: 0.3;
+}
+
+.chart-title {
+  font-family: 'Space Mono', monospace;
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+  color: var(--text);
+}
+
+.chart-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+  max-width: 700px;
+}
+
+.chart-number {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 0.5rem;
+}
+
+/* Two-column layout */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+/* Tooltip */
+.tooltip {
+  position: fixed;
+  background: rgba(17, 24, 39, 0.95);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.8rem;
+  pointer-events: none;
+  z-index: 1000;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  max-width: 280px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.tooltip.visible { opacity: 1; }
+
+.tooltip strong { color: var(--accent1); }
+.tooltip .pay { color: var(--accent3); font-family: 'Space Mono', monospace; }
+
+/* Navigation */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10, 14, 23, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0.8rem 0;
+  margin: 0 -2rem 2rem;
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+
+nav .nav-inner {
+  display: flex; gap: 0.5rem; overflow-x: auto;
+  scrollbar-width: none; max-width: 1400px; margin: 0 auto;
+}
+
+nav .nav-inner::-webkit-scrollbar { display: none; }
+
+nav a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.78rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 6px;
+  white-space: nowrap;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+nav a:hover { color: var(--text); background: var(--surface2); }
+
+/* SVG styles */
+svg text { font-family: 'DM Sans', sans-serif; }
+
+/* Sankey specific */
+.sankey-link { fill: none; stroke-opacity: 0.25; transition: stroke-opacity 0.2s; }
+.sankey-link:hover { stroke-opacity: 0.55; }
+
+/* Animations */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.chart-section { animation: fadeIn 0.5s ease-out; }
+.kpi-card { animation: fadeIn 0.4s ease-out; }
+.kpi-card:nth-child(2) { animation-delay: 0.05s; }
+.kpi-card:nth-child(3) { animation-delay: 0.1s; }
+.kpi-card:nth-child(4) { animation-delay: 0.15s; }
+.kpi-card:nth-child(5) { animation-delay: 0.2s; }
+
+/* Legend */
+.legend { display: flex; flex-wrap: wrap; gap: 0.8rem; margin-top: 1rem; }
+.legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: var(--text-muted); }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+footer {
+  text-align: center;
+  padding: 2rem 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+</style>
+</head>
+<body>
+<div class="noise-overlay"></div>
+<div class="tooltip" id="tooltip"></div>
+
+<div class="container">
+<header>
+  <h1>Automation Demand Intelligence</h1>
+  <p class="subtitle">Analysis of 79 Upwork job postings for Make.com, n8n, and workflow automation — revealing where demand, pay, and opportunity intersect.</p>
+</header>
+
+<nav>
+  <div class="nav-inner">
+    <a href="#bubble">Opportunity Matrix</a>
+    <a href="#sankey">Demand Flow</a>
+    <a href="#radar">Proficiency Radar</a>
+    <a href="#heatmap">Tool Stacks</a>
+    <a href="#lollipop">Pay by Role</a>
+    <a href="#treemap">Demand Landscape</a>
+  </div>
+</nav>
+
+<div class="kpi-row" id="kpis"></div>
+
+<div id="bubble" class="chart-section">
+  <div class="chart-number">01 / Opportunity Matrix</div>
+  <div class="chart-title">Industry × Automation Target</div>
+  <div class="chart-desc">Bubble size = posting frequency. Color = average hourly rate. Find the sweet spots: large, green bubbles are high-demand, high-pay targets for your PoCs.</div>
+  <div id="bubble-chart"></div>
+</div>
+
+<div id="sankey" class="chart-section">
+  <div class="chart-number">02 / Demand Flow</div>
+  <div class="chart-title">Platform → Industry → Automation Target</div>
+  <div class="chart-desc">How demand flows from each automation platform through industries into specific tasks. Thicker bands = stronger connection.</div>
+  <div id="sankey-chart"></div>
+</div>
+
+<div class="two-col">
+  <div id="radar" class="chart-section">
+    <div class="chart-number">03 / Proficiency Radar</div>
+    <div class="chart-title">What Clients Ask You to Prove</div>
+    <div class="chart-desc">Required proficiency areas by client understanding level. Shape your portfolio to match.</div>
+    <div id="radar-chart"></div>
+  </div>
+
+  <div id="lollipop" class="chart-section">
+    <div class="chart-number">05 / Payment Range</div>
+    <div class="chart-title">Hourly Rate by Inferred Role</div>
+    <div class="chart-desc">Range bars show low-to-high band, dot marks average. Position yourself in premium roles.</div>
+    <div id="lollipop-chart"></div>
+  </div>
+</div>
+
+<div id="heatmap" class="chart-section">
+  <div class="chart-number">04 / Tool Co-occurrence</div>
+  <div class="chart-title">Which Tools Get Mentioned Together</div>
+  <div class="chart-desc">Darker cells = more frequent pairing. Diagonal = individual mention count. These clusters reveal the "stacks" the market expects.</div>
+  <div id="heatmap-chart"></div>
+</div>
+
+<div id="treemap" class="chart-section">
+  <div class="chart-number">06 / Demand Landscape</div>
+  <div class="chart-title">Industry → Target → Tool (Treemap)</div>
+  <div class="chart-desc">The full demand hierarchy at a glance. Larger rectangles = more postings. Hover for details.</div>
+  <div id="treemap-chart"></div>
+</div>
+
+<footer>Upwork Automation Demand Intelligence · 79 postings analyzed · Data as of 2025</footer>
+</div>
+
+<script>
+const DATA = {"bubble_matrix": [{"industry": "Recruitment / HR", "target": "Workflow Orchestration", "count": 33, "avg_pay": 37.4}, {"industry": "General Business / Agency", "target": "Workflow Orchestration", "count": 54, "avg_pay": 40.5}, {"industry": "Sales / Lead Generation", "target": "CRM Management", "count": 30, "avg_pay": 42.8}, {"industry": "Sales / Lead Generation", "target": "Reporting / Analytics", "count": 21, "avg_pay": 48.5}, {"industry": "Sales / Lead Generation", "target": "Document Processing", "count": 27, "avg_pay": 46.3}, {"industry": "Sales / Lead Generation", "target": "Sales Outreach", "count": 15, "avg_pay": 46.2}, {"industry": "Sales / Lead Generation", "target": "Workflow Orchestration", "count": 38, "avg_pay": 43.3}, {"industry": "Sales / Lead Generation", "target": "AI Agent / Assistant", "count": 17, "avg_pay": 37.1}, {"industry": "Sales / Lead Generation", "target": "Voice AI / Phone", "count": 27, "avg_pay": 44.3}, {"industry": "Logistics / Operations", "target": "CRM Management", "count": 8, "avg_pay": 35.4}, {"industry": "Logistics / Operations", "target": "Reporting / Analytics", "count": 11, "avg_pay": 36.4}, {"industry": "Logistics / Operations", "target": "Document Processing", "count": 7, "avg_pay": 36.7}, {"industry": "Logistics / Operations", "target": "Sales Outreach", "count": 4, "avg_pay": 34.0}, {"industry": "Logistics / Operations", "target": "Workflow Orchestration", "count": 14, "avg_pay": 33.2}, {"industry": "Logistics / Operations", "target": "AI Agent / Assistant", "count": 4, "avg_pay": 35.2}, {"industry": "Logistics / Operations", "target": "Voice AI / Phone", "count": 8, "avg_pay": 38.8}, {"industry": "General Business / Agency", "target": "CRM Management", "count": 25, "avg_pay": 45.5}, {"industry": "General Business / Agency", "target": "Reporting / Analytics", "count": 22, "avg_pay": 48.5}, {"industry": "General Business / Agency", "target": "Document Processing", "count": 28, "avg_pay": 42.1}, {"industry": "General Business / Agency", "target": "Sales Outreach", "count": 14, "avg_pay": 46.3}, {"industry": "General Business / Agency", "target": "AI Agent / Assistant", "count": 13, "avg_pay": 37.2}, {"industry": "General Business / Agency", "target": "Voice AI / Phone", "count": 29, "avg_pay": 43.2}, {"industry": "Marketing / Advertising", "target": "Workflow Orchestration", "count": 16, "avg_pay": 39.4}, {"industry": "Marketing / Advertising", "target": "Voice AI / Phone", "count": 12, "avg_pay": 39.7}, {"industry": "Content / Publishing", "target": "Workflow Orchestration", "count": 11, "avg_pay": 35.8}, {"industry": "Content / Publishing", "target": "Voice AI / Phone", "count": 8, "avg_pay": 36.5}, {"industry": "Recruitment / HR", "target": "CRM Management", "count": 17, "avg_pay": 42.4}, {"industry": "Recruitment / HR", "target": "Reporting / Analytics", "count": 14, "avg_pay": 44.6}, {"industry": "Recruitment / HR", "target": "Sales Outreach", "count": 11, "avg_pay": 43.8}, {"industry": "Recruitment / HR", "target": "Voice AI / Phone", "count": 22, "avg_pay": 38.7}, {"industry": "Legal", "target": "Workflow Orchestration", "count": 10, "avg_pay": 54.7}, {"industry": "Legal", "target": "Voice AI / Phone", "count": 9, "avg_pay": 56.8}, {"industry": "E-commerce / Retail", "target": "CRM Management", "count": 8, "avg_pay": 56.0}, {"industry": "E-commerce / Retail", "target": "Voice AI / Phone", "count": 10, "avg_pay": 52.5}, {"industry": "Recruitment / HR", "target": "Onboarding / HR", "count": 16, "avg_pay": 43.6}, {"industry": "Recruitment / HR", "target": "Notification / Alerts", "count": 14, "avg_pay": 42.3}, {"industry": "E-commerce / Retail", "target": "Reporting / Analytics", "count": 8, "avg_pay": 52.5}, {"industry": "E-commerce / Retail", "target": "Document Processing", "count": 11, "avg_pay": 53.0}, {"industry": "E-commerce / Retail", "target": "Sales Outreach", "count": 3, "avg_pay": 57.5}, {"industry": "E-commerce / Retail", "target": "Workflow Orchestration", "count": 14, "avg_pay": 42.5}, {"industry": "E-commerce / Retail", "target": "Notification / Alerts", "count": 8, "avg_pay": 49.3}, {"industry": "Sales / Lead Generation", "target": "Notification / Alerts", "count": 13, "avg_pay": 48.8}, {"industry": "Recruitment / HR", "target": "Document Processing", "count": 17, "avg_pay": 43.2}, {"industry": "General Business / Agency", "target": "Notification / Alerts", "count": 14, "avg_pay": 43.7}, {"industry": "Marketing / Advertising", "target": "Appointment / Calendar", "count": 4, "avg_pay": 47.5}, {"industry": "Marketing / Advertising", "target": "Reporting / Analytics", "count": 7, "avg_pay": 42.5}, {"industry": "Content / Publishing", "target": "Appointment / Calendar", "count": 4, "avg_pay": 41.7}, {"industry": "Content / Publishing", "target": "Reporting / Analytics", "count": 4, "avg_pay": 41.7}, {"industry": "General Business / Agency", "target": "Appointment / Calendar", "count": 8, "avg_pay": 45.4}, {"industry": "Sales / Lead Generation", "target": "Onboarding / HR", "count": 11, "avg_pay": 51.0}, {"industry": "SaaS / Software", "target": "CRM Management", "count": 15, "avg_pay": 43.8}, {"industry": "SaaS / Software", "target": "Onboarding / HR", "count": 9, "avg_pay": 46.6}, {"industry": "SaaS / Software", "target": "Workflow Orchestration", "count": 23, "avg_pay": 42.4}, {"industry": "General Business / Agency", "target": "Onboarding / HR", "count": 11, "avg_pay": 43.5}, {"industry": "Legal", "target": "CRM Management", "count": 7, "avg_pay": 60.4}, {"industry": "Legal", "target": "Document Processing", "count": 9, "avg_pay": 55.3}, {"industry": "Finance / Accounting", "target": "CRM Management", "count": 5, "avg_pay": 41.9}, {"industry": "Finance / Accounting", "target": "Document Processing", "count": 8, "avg_pay": 38.6}, {"industry": "Finance / Accounting", "target": "Voice AI / Phone", "count": 5, "avg_pay": 43.8}, {"industry": "SaaS / Software", "target": "Voice AI / Phone", "count": 15, "avg_pay": 44.0}, {"industry": "SaaS / Software", "target": "Document Processing", "count": 14, "avg_pay": 43.1}, {"industry": "Sales / Lead Generation", "target": "Appointment / Calendar", "count": 10, "avg_pay": 47.5}, {"industry": "Legal", "target": "Appointment / Calendar", "count": 3, "avg_pay": 51.7}, {"industry": "Legal", "target": "Reporting / Analytics", "count": 8, "avg_pay": 58.4}, {"industry": "Legal", "target": "Onboarding / HR", "count": 2, "avg_pay": 70.0}, {"industry": "Legal", "target": "Sales Outreach", "count": 4, "avg_pay": 63.8}, {"industry": "Legal", "target": "Notification / Alerts", "count": 4, "avg_pay": 62.5}, {"industry": "SaaS / Software", "target": "Appointment / Calendar", "count": 5, "avg_pay": 45.0}, {"industry": "SaaS / Software", "target": "Reporting / Analytics", "count": 13, "avg_pay": 46.2}, {"industry": "SaaS / Software", "target": "Sales Outreach", "count": 5, "avg_pay": 57.0}, {"industry": "SaaS / Software", "target": "Notification / Alerts", "count": 5, "avg_pay": 53.0}, {"industry": "Recruitment / HR", "target": "Appointment / Calendar", "count": 8, "avg_pay": 45.1}, {"industry": "Marketing / Advertising", "target": "CRM Management", "count": 8, "avg_pay": 37.5}, {"industry": "Marketing / Advertising", "target": "Document Processing", "count": 8, "avg_pay": 41.2}, {"industry": "Marketing / Advertising", "target": "AI Agent / Assistant", "count": 5, "avg_pay": 34.6}, {"industry": "SaaS / Software", "target": "AI Agent / Assistant", "count": 6, "avg_pay": 40.8}, {"industry": "Content / Publishing", "target": "CRM Management", "count": 4, "avg_pay": 40.6}, {"industry": "Content / Publishing", "target": "Document Processing", "count": 5, "avg_pay": 37.5}, {"industry": "Content / Publishing", "target": "AI Agent / Assistant", "count": 4, "avg_pay": 34.5}, {"industry": "Marketing / Advertising", "target": "Sales Outreach", "count": 6, "avg_pay": 39.7}, {"industry": "Content / Publishing", "target": "Sales Outreach", "count": 2, "avg_pay": 34.0}, {"industry": "Recruitment / HR", "target": "AI Agent / Assistant", "count": 10, "avg_pay": 40.9}, {"industry": "E-commerce / Retail", "target": "Appointment / Calendar", "count": 5, "avg_pay": 52.5}, {"industry": "Marketing / Advertising", "target": "Notification / Alerts", "count": 4, "avg_pay": 43.8}, {"industry": "Finance / Accounting", "target": "Appointment / Calendar", "count": 3, "avg_pay": 44.2}, {"industry": "Finance / Accounting", "target": "Reporting / Analytics", "count": 6, "avg_pay": 45.4}, {"industry": "Finance / Accounting", "target": "Workflow Orchestration", "count": 7, "avg_pay": 38.6}, {"industry": "Finance / Accounting", "target": "Notification / Alerts", "count": 4, "avg_pay": 37.5}, {"industry": "Content / Publishing", "target": "Notification / Alerts", "count": 2, "avg_pay": 35.0}, {"industry": "Logistics / Operations", "target": "Appointment / Calendar", "count": 4, "avg_pay": 40.6}, {"industry": "Logistics / Operations", "target": "Notification / Alerts", "count": 4, "avg_pay": 38.8}, {"industry": "E-commerce / Retail", "target": "Onboarding / HR", "count": 3, "avg_pay": 52.5}, {"industry": "E-commerce / Retail", "target": "AI Agent / Assistant", "count": 3, "avg_pay": 51.5}, {"industry": "Marketing / Advertising", "target": "Onboarding / HR", "count": 2, "avg_pay": 43.8}, {"industry": "Logistics / Operations", "target": "Onboarding / HR", "count": 5, "avg_pay": 35.5}, {"industry": "Finance / Accounting", "target": "Sales Outreach", "count": 2, "avg_pay": 51.2}], "bubble_industries": ["General Business / Agency", "Sales / Lead Generation", "Recruitment / HR", "SaaS / Software", "Marketing / Advertising", "E-commerce / Retail", "Logistics / Operations", "Content / Publishing", "Legal", "Finance / Accounting"], "bubble_targets": ["Workflow Orchestration", "Voice AI / Phone", "Document Processing", "CRM Management", "Reporting / Analytics", "AI Agent / Assistant", "Notification / Alerts", "Onboarding / HR", "Sales Outreach", "Appointment / Calendar"], "sankey": {"nodes": [{"name": "Customer Service / Support", "group": "industry"}, {"name": "E-commerce / Retail", "group": "industry"}, {"name": "Education / E-learning", "group": "industry"}, {"name": "Finance / Accounting", "group": "industry"}, {"name": "General Business / Agency", "group": "industry"}, {"name": "Healthcare / Medical", "group": "industry"}, {"name": "Legal", "group": "industry"}, {"name": "Logistics / Operations", "group": "industry"}, {"name": "Marketing / Advertising", "group": "industry"}, {"name": "Real Estate", "group": "industry"}, {"name": "Recruitment / HR", "group": "industry"}, {"name": "SaaS / Software", "group": "industry"}, {"name": "Sales / Lead Generation", "group": "industry"}, {"name": "Make.com", "group": "platform"}, {"name": "Not specified", "group": "platform"}, {"name": "Zapier", "group": "platform"}, {"name": "n8n", "group": "platform"}, {"name": "AI Agent / Assistant", "group": "target"}, {"name": "Appointment / Calendar", "group": "target"}, {"name": "CRM Management", "group": "target"}, {"name": "Content Generation", "group": "target"}, {"name": "Customer Support / Chatbot", "group": "target"}, {"name": "Data Entry / Extraction", "group": "target"}, {"name": "Document Processing", "group": "target"}, {"name": "Email Automation", "group": "target"}, {"name": "Invoice / Billing", "group": "target"}, {"name": "Lead Generation / Enrichment", "group": "target"}, {"name": "Notification / Alerts", "group": "target"}, {"name": "Onboarding / HR", "group": "target"}, {"name": "Reporting / Analytics", "group": "target"}, {"name": "Sales Outreach", "group": "target"}, {"name": "Social Media Management", "group": "target"}, {"name": "Voice AI / Phone", "group": "target"}, {"name": "Workflow Orchestration", "group": "target"}], "links": [{"source": 14, "target": 10, "value": 5}, {"source": 14, "target": 4, "value": 4}, {"source": 15, "target": 12, "value": 2}, {"source": 13, "target": 8, "value": 13}, {"source": 14, "target": 12, "value": 13}, {"source": 13, "target": 12, "value": 17}, {"source": 13, "target": 10, "value": 5}, {"source": 13, "target": 4, "value": 3}, {"source": 16, "target": 4, "value": 6}, {"source": 13, "target": 1, "value": 10}, {"source": 14, "target": 11, "value": 3}, {"source": 13, "target": 6, "value": 4}, {"source": 13, "target": 9, "value": 4}, {"source": 16, "target": 12, "value": 9}, {"source": 14, "target": 8, "value": 3}, {"source": 16, "target": 1, "value": 8}, {"source": 16, "target": 0, "value": 2}, {"source": 14, "target": 5, "value": 2}, {"source": 16, "target": 8, "value": 5}, {"source": 13, "target": 11, "value": 3}, {"source": 14, "target": 9, "value": 2}, {"source": 13, "target": 5, "value": 3}, {"source": 16, "target": 5, "value": 2}, {"source": 16, "target": 10, "value": 2}, {"source": 16, "target": 9, "value": 2}, {"source": 10, "target": 33, "value": 4}, {"source": 4, "target": 33, "value": 11}, {"source": 12, "target": 19, "value": 25}, {"source": 8, "target": 31, "value": 7}, {"source": 12, "target": 17, "value": 4}, {"source": 8, "target": 20, "value": 4}, {"source": 12, "target": 20, "value": 3}, {"source": 12, "target": 31, "value": 2}, {"source": 12, "target": 29, "value": 8}, {"source": 6, "target": 33, "value": 2}, {"source": 1, "target": 19, "value": 8}, {"source": 12, "target": 32, "value": 2}, {"source": 10, "target": 28, "value": 4}, {"source": 10, "target": 32, "value": 4}, {"source": 1, "target": 25, "value": 5}, {"source": 12, "target": 25, "value": 5}, {"source": 8, "target": 24, "value": 2}, {"source": 8, "target": 21, "value": 4}, {"source": 12, "target": 28, "value": 6}, {"source": 11, "target": 19, "value": 3}, {"source": 11, "target": 28, "value": 3}, {"source": 6, "target": 19, "value": 2}, {"source": 1, "target": 33, "value": 3}, {"source": 8, "target": 33, "value": 2}, {"source": 1, "target": 24, "value": 2}, {"source": 9, "target": 19, "value": 4}, {"source": 9, "target": 25, "value": 3}, {"source": 12, "target": 26, "value": 6}, {"source": 12, "target": 18, "value": 6}, {"source": 8, "target": 19, "value": 8}, {"source": 12, "target": 21, "value": 4}, {"source": 12, "target": 23, "value": 4}, {"source": 12, "target": 33, "value": 2}, {"source": 4, "target": 23, "value": 4}, {"source": 8, "target": 26, "value": 4}, {"source": 1, "target": 18, "value": 4}, {"source": 0, "target": 33, "value": 2}, {"source": 5, "target": 21, "value": 2}, {"source": 5, "target": 18, "value": 4}, {"source": 1, "target": 21, "value": 3}, {"source": 11, "target": 23, "value": 2}, {"source": 1, "target": 28, "value": 2}, {"source": 8, "target": 29, "value": 2}, {"source": 9, "target": 23, "value": 2}, {"source": 1, "target": 27, "value": 2}, {"source": 8, "target": 27, "value": 2}, {"source": 5, "target": 19, "value": 4}, {"source": 10, "target": 18, "value": 2}, {"source": 3, "target": 23, "value": 2}, {"source": 11, "target": 25, "value": 2}, {"source": 9, "target": 29, "value": 3}, {"source": 5, "target": 29, "value": 2}, {"source": 12, "target": 22, "value": 2}]}, "radar": {"categories": ["AI/LLM Implementation", "Workflow Architecture & Design", "API & Webhook Integration", "CRM & Sales Tools", "Platform Expertise (Make/n8n/Zapier)", "Database & Data Management", "Communication & Documentation", "Troubleshooting & Debugging"], "series": {"Medium": {"AI/LLM Implementation": 14.8, "Workflow Architecture & Design": 10.4, "API & Webhook Integration": 7.7, "CRM & Sales Tools": 10.9, "Platform Expertise (Make/n8n/Zapier)": 6.0, "Database & Data Management": 2.2, "Communication & Documentation": 4.9, "Troubleshooting & Debugging": 2.7}, "Medium-Low": {"AI/LLM Implementation": 10.8, "Workflow Architecture & Design": 6.8, "API & Webhook Integration": 10.8, "CRM & Sales Tools": 6.8, "Platform Expertise (Make/n8n/Zapier)": 5.4, "Database & Data Management": 8.1, "Communication & Documentation": 6.8, "Troubleshooting & Debugging": 4.1}, "Medium-High": {"AI/LLM Implementation": 8.3, "Workflow Architecture & Design": 12.5, "API & Webhook Integration": 12.5, "CRM & Sales Tools": 4.2, "Platform Expertise (Make/n8n/Zapier)": 4.2, "Database & Data Management": 6.2, "Communication & Documentation": 10.4, "Troubleshooting & Debugging": 6.2}, "High": {"AI/LLM Implementation": 11.2, "Workflow Architecture & Design": 12.4, "API & Webhook Integration": 10.1, "CRM & Sales Tools": 5.6, "Platform Expertise (Make/n8n/Zapier)": 6.7, "Database & Data Management": 10.1, "Communication & Documentation": 3.4, "Troubleshooting & Debugging": 11.2}, "Low": {"AI/LLM Implementation": 0.0, "Workflow Architecture & Design": 0.0, "API & Webhook Integration": 100.0, "CRM & Sales Tools": 0.0, "Platform Expertise (Make/n8n/Zapier)": 0.0, "Database & Data Management": 0.0, "Communication & Documentation": 0.0, "Troubleshooting & Debugging": 0.0}}}, "heatmap": {"tools": ["Make.com", "n8n", "OpenAI / ChatGPT", "Zapier", "Anthropic / Claude", "Notion", "Airtable", "Slack", "Google Sheets", "HubSpot", "Gmail / Google Workspace", "WordPress"], "data": [{"tool1": "Make.com", "tool2": "Make.com", "value": 44}, {"tool1": "Make.com", "tool2": "n8n", "value": 19}, {"tool1": "Make.com", "tool2": "OpenAI / ChatGPT", "value": 20}, {"tool1": "Make.com", "tool2": "Zapier", "value": 20}, {"tool1": "Make.com", "tool2": "Anthropic / Claude", "value": 9}, {"tool1": "Make.com", "tool2": "Notion", "value": 11}, {"tool1": "Make.com", "tool2": "Airtable", "value": 11}, {"tool1": "Make.com", "tool2": "Slack", "value": 8}, {"tool1": "Make.com", "tool2": "Google Sheets", "value": 9}, {"tool1": "Make.com", "tool2": "HubSpot", "value": 5}, {"tool1": "Make.com", "tool2": "Gmail / Google Workspace", "value": 7}, {"tool1": "Make.com", "tool2": "WordPress", "value": 5}, {"tool1": "n8n", "tool2": "Make.com", "value": 19}, {"tool1": "n8n", "tool2": "n8n", "value": 31}, {"tool1": "n8n", "tool2": "OpenAI / ChatGPT", "value": 14}, {"tool1": "n8n", "tool2": "Zapier", "value": 9}, {"tool1": "n8n", "tool2": "Anthropic / Claude", "value": 12}, {"tool1": "n8n", "tool2": "Notion", "value": 6}, {"tool1": "n8n", "tool2": "Airtable", "value": 4}, {"tool1": "n8n", "tool2": "Slack", "value": 7}, {"tool1": "n8n", "tool2": "Google Sheets", "value": 4}, {"tool1": "n8n", "tool2": "HubSpot", "value": 7}, {"tool1": "n8n", "tool2": "Gmail / Google Workspace", "value": 5}, {"tool1": "n8n", "tool2": "WordPress", "value": 3}, {"tool1": "OpenAI / ChatGPT", "tool2": "Make.com", "value": 20}, {"tool1": "OpenAI / ChatGPT", "tool2": "n8n", "value": 14}, {"tool1": "OpenAI / ChatGPT", "tool2": "OpenAI / ChatGPT", "value": 27}, {"tool1": "OpenAI / ChatGPT", "tool2": "Zapier", "value": 12}, {"tool1": "OpenAI / ChatGPT", "tool2": "Anthropic / Claude", "value": 11}, {"tool1": "OpenAI / ChatGPT", "tool2": "Notion", "value": 12}, {"tool1": "OpenAI / ChatGPT", "tool2": "Airtable", "value": 10}, {"tool1": "OpenAI / ChatGPT", "tool2": "Slack", "value": 6}, {"tool1": "OpenAI / ChatGPT", "tool2": "Google Sheets", "value": 5}, {"tool1": "OpenAI / ChatGPT", "tool2": "HubSpot", "value": 5}, {"tool1": "OpenAI / ChatGPT", "tool2": "Gmail / Google Workspace", "value": 7}, {"tool1": "OpenAI / ChatGPT", "tool2": "WordPress", "value": 4}, {"tool1": "Zapier", "tool2": "Make.com", "value": 20}, {"tool1": "Zapier", "tool2": "n8n", "value": 9}, {"tool1": "Zapier", "tool2": "OpenAI / ChatGPT", "value": 12}, {"tool1": "Zapier", "tool2": "Zapier", "value": 21}, {"tool1": "Zapier", "tool2": "Anthropic / Claude", "value": 6}, {"tool1": "Zapier", "tool2": "Notion", "value": 7}, {"tool1": "Zapier", "tool2": "Airtable", "value": 8}, {"tool1": "Zapier", "tool2": "Slack", "value": 2}, {"tool1": "Zapier", "tool2": "Google Sheets", "value": 4}, {"tool1": "Zapier", "tool2": "HubSpot", "value": 2}, {"tool1": "Zapier", "tool2": "Gmail / Google Workspace", "value": 3}, {"tool1": "Zapier", "tool2": "WordPress", "value": 4}, {"tool1": "Anthropic / Claude", "tool2": "Make.com", "value": 9}, {"tool1": "Anthropic / Claude", "tool2": "n8n", "value": 12}, {"tool1": "Anthropic / Claude", "tool2": "OpenAI / ChatGPT", "value": 11}, {"tool1": "Anthropic / Claude", "tool2": "Zapier", "value": 6}, {"tool1": "Anthropic / Claude", "tool2": "Anthropic / Claude", "value": 16}, {"tool1": "Anthropic / Claude", "tool2": "Notion", "value": 4}, {"tool1": "Anthropic / Claude", "tool2": "Airtable", "value": 2}, {"tool1": "Anthropic / Claude", "tool2": "Slack", "value": 5}, {"tool1": "Anthropic / Claude", "tool2": "Google Sheets", "value": 2}, {"tool1": "Anthropic / Claude", "tool2": "HubSpot", "value": 6}, {"tool1": "Anthropic / Claude", "tool2": "Gmail / Google Workspace", "value": 3}, {"tool1": "Anthropic / Claude", "tool2": "WordPress", "value": 2}, {"tool1": "Notion", "tool2": "Make.com", "value": 11}, {"tool1": "Notion", "tool2": "n8n", "value": 6}, {"tool1": "Notion", "tool2": "OpenAI / ChatGPT", "value": 12}, {"tool1": "Notion", "tool2": "Zapier", "value": 7}, {"tool1": "Notion", "tool2": "Anthropic / Claude", "value": 4}, {"tool1": "Notion", "tool2": "Notion", "value": 14}, {"tool1": "Notion", "tool2": "Airtable", "value": 8}, {"tool1": "Notion", "tool2": "Slack", "value": 3}, {"tool1": "Notion", "tool2": "Google Sheets", "value": 0}, {"tool1": "Notion", "tool2": "HubSpot", "value": 2}, {"tool1": "Notion", "tool2": "Gmail / Google Workspace", "value": 4}, {"tool1": "Notion", "tool2": "WordPress", "value": 3}, {"tool1": "Airtable", "tool2": "Make.com", "value": 11}, {"tool1": "Airtable", "tool2": "n8n", "value": 4}, {"tool1": "Airtable", "tool2": "OpenAI / ChatGPT", "value": 10}, {"tool1": "Airtable", "tool2": "Zapier", "value": 8}, {"tool1": "Airtable", "tool2": "Anthropic / Claude", "value": 2}, {"tool1": "Airtable", "tool2": "Notion", "value": 8}, {"tool1": "Airtable", "tool2": "Airtable", "value": 11}, {"tool1": "Airtable", "tool2": "Slack", "value": 3}, {"tool1": "Airtable", "tool2": "Google Sheets", "value": 2}, {"tool1": "Airtable", "tool2": "HubSpot", "value": 2}, {"tool1": "Airtable", "tool2": "Gmail / Google Workspace", "value": 5}, {"tool1": "Airtable", "tool2": "WordPress", "value": 3}, {"tool1": "Slack", "tool2": "Make.com", "value": 8}, {"tool1": "Slack", "tool2": "n8n", "value": 7}, {"tool1": "Slack", "tool2": "OpenAI / ChatGPT", "value": 6}, {"tool1": "Slack", "tool2": "Zapier", "value": 2}, {"tool1": "Slack", "tool2": "Anthropic / Claude", "value": 5}, {"tool1": "Slack", "tool2": "Notion", "value": 3}, {"tool1": "Slack", "tool2": "Airtable", "value": 3}, {"tool1": "Slack", "tool2": "Slack", "value": 10}, {"tool1": "Slack", "tool2": "Google Sheets", "value": 1}, {"tool1": "Slack", "tool2": "HubSpot", "value": 5}, {"tool1": "Slack", "tool2": "Gmail / Google Workspace", "value": 3}, {"tool1": "Slack", "tool2": "WordPress", "value": 1}, {"tool1": "Google Sheets", "tool2": "Make.com", "value": 9}, {"tool1": "Google Sheets", "tool2": "n8n", "value": 4}, {"tool1": "Google Sheets", "tool2": "OpenAI / ChatGPT", "value": 5}, {"tool1": "Google Sheets", "tool2": "Zapier", "value": 4}, {"tool1": "Google Sheets", "tool2": "Anthropic / Claude", "value": 2}, {"tool1": "Google Sheets", "tool2": "Notion", "value": 0}, {"tool1": "Google Sheets", "tool2": "Airtable", "value": 2}, {"tool1": "Google Sheets", "tool2": "Slack", "value": 1}, {"tool1": "Google Sheets", "tool2": "Google Sheets", "value": 9}, {"tool1": "Google Sheets", "tool2": "HubSpot", "value": 2}, {"tool1": "Google Sheets", "tool2": "Gmail / Google Workspace", "value": 2}, {"tool1": "Google Sheets", "tool2": "WordPress", "value": 2}, {"tool1": "HubSpot", "tool2": "Make.com", "value": 5}, {"tool1": "HubSpot", "tool2": "n8n", "value": 7}, {"tool1": "HubSpot", "tool2": "OpenAI / ChatGPT", "value": 5}, {"tool1": "HubSpot", "tool2": "Zapier", "value": 2}, {"tool1": "HubSpot", "tool2": "Anthropic / Claude", "value": 6}, {"tool1": "HubSpot", "tool2": "Notion", "value": 2}, {"tool1": "HubSpot", "tool2": "Airtable", "value": 2}, {"tool1": "HubSpot", "tool2": "Slack", "value": 5}, {"tool1": "HubSpot", "tool2": "Google Sheets", "value": 2}, {"tool1": "HubSpot", "tool2": "HubSpot", "value": 8}, {"tool1": "HubSpot", "tool2": "Gmail / Google Workspace", "value": 1}, {"tool1": "HubSpot", "tool2": "WordPress", "value": 1}, {"tool1": "Gmail / Google Workspace", "tool2": "Make.com", "value": 7}, {"tool1": "Gmail / Google Workspace", "tool2": "n8n", "value": 5}, {"tool1": "Gmail / Google Workspace", "tool2": "OpenAI / ChatGPT", "value": 7}, {"tool1": "Gmail / Google Workspace", "tool2": "Zapier", "value": 3}, {"tool1": "Gmail / Google Workspace", "tool2": "Anthropic / Claude", "value": 3}, {"tool1": "Gmail / Google Workspace", "tool2": "Notion", "value": 4}, {"tool1": "Gmail / Google Workspace", "tool2": "Airtable", "value": 5}, {"tool1": "Gmail / Google Workspace", "tool2": "Slack", "value": 3}, {"tool1": "Gmail / Google Workspace", "tool2": "Google Sheets", "value": 2}, {"tool1": "Gmail / Google Workspace", "tool2": "HubSpot", "value": 1}, {"tool1": "Gmail / Google Workspace", "tool2": "Gmail / Google Workspace", "value": 8}, {"tool1": "Gmail / Google Workspace", "tool2": "WordPress", "value": 0}, {"tool1": "WordPress", "tool2": "Make.com", "value": 5}, {"tool1": "WordPress", "tool2": "n8n", "value": 3}, {"tool1": "WordPress", "tool2": "OpenAI / ChatGPT", "value": 4}, {"tool1": "WordPress", "tool2": "Zapier", "value": 4}, {"tool1": "WordPress", "tool2": "Anthropic / Claude", "value": 2}, {"tool1": "WordPress", "tool2": "Notion", "value": 3}, {"tool1": "WordPress", "tool2": "Airtable", "value": 3}, {"tool1": "WordPress", "tool2": "Slack", "value": 1}, {"tool1": "WordPress", "tool2": "Google Sheets", "value": 2}, {"tool1": "WordPress", "tool2": "HubSpot", "value": 1}, {"tool1": "WordPress", "tool2": "Gmail / Google Workspace", "value": 0}, {"tool1": "WordPress", "tool2": "WordPress", "value": 6}]}, "lollipop": [{"role": "Integration Specialist", "min_low": 10.0, "max_high": 85.0, "avg": 52.0, "count": 5}, {"role": "AI Automation Expert", "min_low": 10.0, "max_high": 150.0, "avg": 49.6, "count": 4}, {"role": "AI Engineer", "min_low": 5.0, "max_high": 90.0, "avg": 42.5, "count": 5}, {"role": "Chatbot Developer", "min_low": 30.0, "max_high": 50.0, "avg": 40.0, "count": 2}, {"role": "Automation Specialist", "min_low": 6.0, "max_high": 150.0, "avg": 38.5, "count": 24}, {"role": "No-Code/Low-Code Developer", "min_low": 20.0, "max_high": 60.0, "avg": 38.3, "count": 3}, {"role": "Automation Engineer", "min_low": 10.0, "max_high": 80.0, "avg": 32.9, "count": 13}, {"role": "Consultant / Advisor", "min_low": 10.0, "max_high": 60.0, "avg": 27.8, "count": 3}], "treemap": {"name": "Demand Landscape", "children": [{"name": "General Business / Agency", "children": [{"name": "Workflow Orchestration", "children": [{"name": "Make.com", "value": 32}, {"name": "n8n", "value": 29}, {"name": "OpenAI / ChatGPT", "value": 24}]}, {"name": "Voice AI / Phone", "children": [{"name": "Make.com", "value": 19}, {"name": "OpenAI / ChatGPT", "value": 15}, {"name": "n8n", "value": 14}]}, {"name": "Document Processing", "children": [{"name": "Make.com", "value": 15}, {"name": "OpenAI / ChatGPT", "value": 15}, {"name": "n8n", "value": 15}]}, {"name": "CRM Management", "children": [{"name": "Make.com", "value": 16}, {"name": "OpenAI / ChatGPT", "value": 12}, {"name": "n8n", "value": 12}]}]}, {"name": "Sales / Lead Generation", "children": [{"name": "Workflow Orchestration", "children": [{"name": "Make.com", "value": 21}, {"name": "n8n", "value": 21}, {"name": "OpenAI / ChatGPT", "value": 18}]}, {"name": "CRM Management", "children": [{"name": "Make.com", "value": 17}, {"name": "OpenAI / ChatGPT", "value": 12}, {"name": "n8n", "value": 12}]}, {"name": "Document Processing", "children": [{"name": "n8n", "value": 17}, {"name": "Make.com", "value": 16}, {"name": "OpenAI / ChatGPT", "value": 13}]}, {"name": "Voice AI / Phone", "children": [{"name": "Make.com", "value": 17}, {"name": "Zapier", "value": 13}, {"name": "OpenAI / ChatGPT", "value": 13}]}]}, {"name": "Recruitment / HR", "children": [{"name": "Workflow Orchestration", "children": [{"name": "Make.com", "value": 17}, {"name": "n8n", "value": 17}, {"name": "OpenAI / ChatGPT", "value": 13}]}, {"name": "Voice AI / Phone", "children": [{"name": "Make.com", "value": 13}, {"name": "n8n", "value": 9}, {"name": "Zapier", "value": 8}]}, {"name": "CRM Management", "children": [{"name": "Make.com", "value": 9}, {"name": "OpenAI / ChatGPT", "value": 8}, {"name": "n8n", "value": 8}]}, {"name": "Document Processing", "children": [{"name": "OpenAI / ChatGPT", "value": 10}, {"name": "n8n", "value": 10}, {"name": "Make.com", "value": 9}]}]}, {"name": "SaaS / Software", "children": [{"name": "Workflow Orchestration", "children": [{"name": "Make.com", "value": 16}, {"name": "n8n", "value": 12}, {"name": "Zapier", "value": 10}]}, {"name": "CRM Management", "children": [{"name": "Make.com", "value": 9}, {"name": "n8n", "value": 8}, {"name": "Zapier", "value": 7}]}, {"name": "Voice AI / Phone", "children": [{"name": "Make.com", "value": 12}, {"name": "Zapier", "value": 9}, {"name": "n8n", "value": 9}]}, {"name": "Document Processing", "children": [{"name": "Make.com", "value": 11}, {"name": "OpenAI / ChatGPT", "value": 9}, {"name": "n8n", "value": 9}]}]}, {"name": "Marketing / Advertising", "children": [{"name": "Workflow Orchestration", "children": [{"name": "Make.com", "value": 9}, {"name": "OpenAI / ChatGPT", "value": 9}, {"name": "Zapier", "value": 7}]}, {"name": "Voice AI / Phone", "children": [{"name": "Make.com", "value": 8}, {"name": "Zapier", "value": 7}, {"name": "OpenAI / ChatGPT", "value": 7}]}, {"name": "Social Media Management", "children": [{"name": "Make.com", "value": 9}, {"name": "OpenAI / ChatGPT", "value": 6}, {"name": "Zapier", "value": 4}]}, {"name": "CRM Management", "children": [{"name": "Zapier", "value": 5}, {"name": "OpenAI / ChatGPT", "value": 5}, {"name": "Make.com", "value": 4}]}]}, {"name": "E-commerce / Retail", "children": [{"name": "Workflow Orchestration", "children": [{"name": "Make.com", "value": 11}, {"name": "n8n", "value": 10}, {"name": "Anthropic / Claude", "value": 7}]}, {"name": "Document Processing", "children": [{"name": "n8n", "value": 9}, {"name": "Make.com", "value": 8}, {"name": "OpenAI / ChatGPT", "value": 6}]}, {"name": "Voice AI / Phone", "children": [{"name": "Make.com", "value": 7}, {"name": "n8n", "value": 6}, {"name": "Anthropic / Claude", "value": 4}]}, {"name": "CRM Management", "children": [{"name": "Make.com", "value": 6}, {"name": "n8n", "value": 5}, {"name": "Slack", "value": 4}]}]}]}, "summary": {"total_postings": 79, "avg_hourly_rate": 39.0, "pct_ai": 96.2, "top_platform": "Make.com", "top_industry": "General Business / Agency", "top_target": "Workflow Orchestration"}};
+
+const tooltip = d3.select('#tooltip');
+function showTip(evt, html) {
+  tooltip.html(html).classed('visible', true)
+    .style('left', Math.min(evt.clientX + 14, window.innerWidth - 300) + 'px')
+    .style('top', (evt.clientY - 10) + 'px');
+}
+function hideTip() { tooltip.classed('visible', false); }
+
+const COLORS = ['#38bdf8','#a78bfa','#34d399','#fb923c','#f472b6','#facc15','#22d3ee','#c084fc','#4ade80','#f97316','#e879f9','#fbbf24'];
+const payScale = d3.scaleSequential(d3.interpolateRgbBasis(['#f472b6','#facc15','#34d399']));
+
+// KPIs
+(function(){
+  const s = DATA.summary;
+  const kpis = [
+    { label: 'Total Postings', value: s.total_postings, detail: 'Upwork job descriptions' },
+    { label: 'Avg Hourly Rate', value: '$' + s.avg_hourly_rate, detail: 'Midpoint of ranges' },
+    { label: 'AI Required', value: s.pct_ai + '%', detail: 'Postings with AI component' },
+    { label: 'Top Platform', value: s.top_platform, detail: '56% of postings' },
+    { label: 'Top Target', value: 'Workflow Orch.', detail: '71% of postings' },
+  ];
+  const row = d3.select('#kpis');
+  kpis.forEach(k => {
+    const card = row.append('div').attr('class', 'kpi-card');
+    card.append('div').attr('class', 'kpi-label').text(k.label);
+    card.append('div').attr('class', 'kpi-value').text(k.value);
+    card.append('div').attr('class', 'kpi-detail').text(k.detail);
+  });
+})();
+
+// 1. BUBBLE MATRIX
+(function(){
+  const container = d3.select('#bubble-chart');
+  const W = container.node().getBoundingClientRect().width;
+  const margin = { top: 20, right: 20, bottom: 120, left: 180 };
+  const w = W - margin.left - margin.right;
+  const h = 500;
+
+  const svg = container.append('svg').attr('width', W).attr('height', h + margin.top + margin.bottom);
+  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+  const industries = DATA.bubble_industries;
+  const targets = DATA.bubble_targets;
+
+  const x = d3.scaleBand().domain(targets).range([0, w]).padding(0.1);
+  const y = d3.scaleBand().domain(industries).range([0, h]).padding(0.1);
+
+  const maxCount = d3.max(DATA.bubble_matrix, d => d.count);
+  const r = d3.scaleSqrt().domain([0, maxCount]).range([3, 28]);
+
+  const pays = DATA.bubble_matrix.filter(d => d.avg_pay).map(d => d.avg_pay);
+  payScale.domain([d3.min(pays), d3.max(pays)]);
+
+  g.append('g').attr('transform', `translate(0,${h})`).call(d3.axisBottom(x).tickSize(0))
+    .selectAll('text').attr('fill', '#94a3b8').attr('font-size', '0.7rem')
+    .attr('transform', 'rotate(-40)').attr('text-anchor', 'end').attr('dx', '-0.5em').attr('dy', '0.3em');
+  g.selectAll('.domain').remove();
+
+  g.append('g').call(d3.axisLeft(y).tickSize(0))
+    .selectAll('text').attr('fill', '#94a3b8').attr('font-size', '0.72rem');
+  g.selectAll('.domain').remove();
+
+  // Grid lines
+  targets.forEach(t => {
+    g.append('line').attr('x1', x(t) + x.bandwidth()/2).attr('x2', x(t) + x.bandwidth()/2)
+      .attr('y1', 0).attr('y2', h).attr('stroke', '#1e293b').attr('stroke-dasharray', '2,4');
+  });
+
+  g.selectAll('circle').data(DATA.bubble_matrix).join('circle')
+    .attr('cx', d => x(d.target) + x.bandwidth()/2)
+    .attr('cy', d => y(d.industry) + y.bandwidth()/2)
+    .attr('r', d => r(d.count))
+    .attr('fill', d => d.avg_pay ? payScale(d.avg_pay) : '#475569')
+    .attr('fill-opacity', 0.75)
+    .attr('stroke', d => d.avg_pay ? payScale(d.avg_pay) : '#475569')
+    .attr('stroke-opacity', 0.9)
+    .attr('stroke-width', 1.5)
+    .on('mouseover', function(evt, d) {
+      d3.select(this).attr('fill-opacity', 1).attr('stroke-width', 2.5);
+      showTip(evt, `<strong>${d.industry}</strong><br>${d.target}<br>Postings: ${d.count}<br>${d.avg_pay ? '<span class="pay">Avg: $' + d.avg_pay + '/hr</span>' : 'No pay data'}`);
+    })
+    .on('mousemove', (evt) => { tooltip.style('left', (evt.clientX+14)+'px').style('top', (evt.clientY-10)+'px'); })
+    .on('mouseout', function() { d3.select(this).attr('fill-opacity', 0.75).attr('stroke-width', 1.5); hideTip(); });
+
+  // Color legend
+  const legendG = svg.append('g').attr('transform', `translate(${margin.left}, ${h + margin.top + 75})`);
+  const gradW = 200;
+  const defs = svg.append('defs');
+  const grad = defs.append('linearGradient').attr('id', 'payGrad');
+  grad.append('stop').attr('offset', '0%').attr('stop-color', '#f472b6');
+  grad.append('stop').attr('offset', '50%').attr('stop-color', '#facc15');
+  grad.append('stop').attr('offset', '100%').attr('stop-color', '#34d399');
+  legendG.append('rect').attr('width', gradW).attr('height', 10).attr('rx', 3).attr('fill', 'url(#payGrad)');
+  legendG.append('text').attr('y', 24).attr('fill', '#94a3b8').attr('font-size', '0.7rem').text('$' + d3.min(pays) + '/hr');
+  legendG.append('text').attr('x', gradW).attr('y', 24).attr('fill', '#94a3b8').attr('font-size', '0.7rem').attr('text-anchor', 'end').text('$' + d3.max(pays) + '/hr');
+  legendG.append('text').attr('x', gradW/2).attr('y', 24).attr('fill', '#94a3b8').attr('font-size', '0.7rem').attr('text-anchor', 'middle').text('Avg Pay →');
+  legendG.append('text').attr('x', gradW + 40).attr('y', 8).attr('fill', '#94a3b8').attr('font-size', '0.7rem').text('Bubble size = posting count');
+})();
+
+// 2. SANKEY
+(function(){
+  const container = d3.select('#sankey-chart');
+  const W = container.node().getBoundingClientRect().width;
+  const H = 580;
+  const margin = { top: 10, right: 10, bottom: 10, left: 10 };
+
+  const svg = container.append('svg').attr('width', W).attr('height', H);
+  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+  const sankeyGen = d3.sankey()
+    .nodeId(d => d.index)
+    .nodeWidth(16)
+    .nodePadding(12)
+    .nodeAlign(d3.sankeyLeft)
+    .extent([[0, 0], [W - margin.left - margin.right, H - margin.top - margin.bottom]]);
+
+  const nodes = DATA.sankey.nodes.map((d, i) => ({...d, index: i}));
+  const links = DATA.sankey.links.map(d => ({...d}));
+
+  const {nodes: sNodes, links: sLinks} = sankeyGen({nodes, links});
+
+  const groupColor = { platform: '#38bdf8', industry: '#a78bfa', target: '#34d399' };
+
+  g.selectAll('.sankey-link')
+    .data(sLinks).join('path')
+    .attr('class', 'sankey-link')
+    .attr('d', d3.sankeyLinkHorizontal())
+    .attr('stroke', d => groupColor[sNodes[d.source.index]?.group] || '#475569')
+    .attr('stroke-width', d => Math.max(1, d.width))
+    .on('mouseover', (evt, d) => {
+      showTip(evt, `<strong>${d.source.name}</strong> → <strong>${d.target.name}</strong><br>${d.value} postings`);
+    })
+    .on('mousemove', (evt) => { tooltip.style('left', (evt.clientX+14)+'px').style('top', (evt.clientY-10)+'px'); })
+    .on('mouseout', hideTip);
+
+  g.selectAll('.sankey-node')
+    .data(sNodes).join('rect')
+    .attr('x', d => d.x0).attr('y', d => d.y0)
+    .attr('width', d => d.x1 - d.x0).attr('height', d => Math.max(1, d.y1 - d.y0))
+    .attr('fill', d => groupColor[d.group] || '#475569')
+    .attr('rx', 3)
+    .attr('opacity', 0.85);
+
+  g.selectAll('.sankey-label')
+    .data(sNodes).join('text')
+    .attr('x', d => d.x0 < W / 2 ? d.x1 + 6 : d.x0 - 6)
+    .attr('y', d => (d.y0 + d.y1) / 2)
+    .attr('dy', '0.35em')
+    .attr('text-anchor', d => d.x0 < W / 2 ? 'start' : 'end')
+    .attr('fill', '#94a3b8')
+    .attr('font-size', '0.68rem')
+    .text(d => (d.y1 - d.y0) > 14 ? d.name : '');
+
+  // Legend
+  const leg = container.append('div').attr('class', 'legend');
+  [['Platform','#38bdf8'],['Industry','#a78bfa'],['Automation Target','#34d399']].forEach(([l,c]) => {
+    const item = leg.append('div').attr('class', 'legend-item');
+    item.append('div').attr('class', 'legend-dot').style('background', c);
+    item.append('span').text(l);
+  });
+})();
+
+// 3. RADAR
+(function(){
+  const container = d3.select('#radar-chart');
+  const W = Math.min(container.node().getBoundingClientRect().width, 520);
+  const H = 420;
+  const cx = W / 2, cy = H / 2, R = Math.min(W, H) / 2 - 60;
+
+  const svg = container.append('svg').attr('width', W).attr('height', H);
+  const g = svg.append('g').attr('transform', `translate(${cx},${cy})`);
+
+  const cats = DATA.radar.categories;
+  const series = DATA.radar.series;
+  const n = cats.length;
+  const angleSlice = (2 * Math.PI) / n;
+
+  // Remove Low because it's an outlier (only 1 posting, 100% API)
+  const seriesKeys = Object.keys(series).filter(k => k !== 'Low');
+  const seriesColors = { 'High': '#38bdf8', 'Medium-High': '#34d399', 'Medium': '#facc15', 'Medium-Low': '#fb923c' };
+
+  const rScale = d3.scaleLinear().domain([0, 16]).range([0, R]);
+
+  // Grid
+  [4, 8, 12, 16].forEach(level => {
+    g.append('circle').attr('r', rScale(level))
+      .attr('fill', 'none').attr('stroke', '#1e293b').attr('stroke-dasharray', '2,4');
+    g.append('text').attr('x', 4).attr('y', -rScale(level) - 2)
+      .attr('fill', '#475569').attr('font-size', '0.6rem').text(level + '%');
+  });
+
+  // Axes
+  cats.forEach((cat, i) => {
+    const angle = angleSlice * i - Math.PI / 2;
+    const lx = Math.cos(angle) * (R + 20);
+    const ly = Math.sin(angle) * (R + 20);
+    g.append('line').attr('x1', 0).attr('y1', 0)
+      .attr('x2', Math.cos(angle) * R).attr('y2', Math.sin(angle) * R)
+      .attr('stroke', '#1e293b');
+    g.append('text').attr('x', lx).attr('y', ly)
+      .attr('text-anchor', Math.abs(lx) < 5 ? 'middle' : lx > 0 ? 'start' : 'end')
+      .attr('dy', ly > 0 ? '0.8em' : '-0.3em')
+      .attr('fill', '#94a3b8').attr('font-size', '0.62rem')
+      .text(cat.replace(/ \(.*/, '').replace(' & ', '/'));
+  });
+
+  // Series
+  const line = d3.lineRadial().curve(d3.curveLinearClosed);
+
+  seriesKeys.forEach(key => {
+    const vals = cats.map(c => series[key][c] || 0);
+    const points = vals.map((v, i) => [angleSlice * i - Math.PI / 2, rScale(v)]);
+    g.append('path').datum(points)
+      .attr('d', line)
+      .attr('fill', seriesColors[key] || '#475569')
+      .attr('fill-opacity', 0.08)
+      .attr('stroke', seriesColors[key] || '#475569')
+      .attr('stroke-width', 2)
+      .attr('stroke-opacity', 0.8);
+    vals.forEach((v, i) => {
+      const angle = angleSlice * i - Math.PI / 2;
+      g.append('circle')
+        .attr('cx', Math.cos(angle) * rScale(v))
+        .attr('cy', Math.sin(angle) * rScale(v))
+        .attr('r', 3)
+        .attr('fill', seriesColors[key]);
+    });
+  });
+
+  // Legend
+  const leg = container.append('div').attr('class', 'legend');
+  seriesKeys.forEach(key => {
+    const item = leg.append('div').attr('class', 'legend-item');
+    item.append('div').attr('class', 'legend-dot').style('background', seriesColors[key]);
+    item.append('span').text(key + ' understanding');
+  });
+})();
+
+// 4. HEATMAP
+(function(){
+  const container = d3.select('#heatmap-chart');
+  const W = container.node().getBoundingClientRect().width;
+  const margin = { top: 10, right: 20, bottom: 100, left: 160 };
+  const tools = DATA.heatmap.tools;
+  const cellSize = Math.min((W - margin.left - margin.right) / tools.length, 55);
+  const w = cellSize * tools.length;
+  const h = cellSize * tools.length;
+
+  const svg = container.append('svg').attr('width', w + margin.left + margin.right).attr('height', h + margin.top + margin.bottom);
+  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+  const maxVal = d3.max(DATA.heatmap.data.filter(d => d.tool1 !== d.tool2), d => d.value);
+  const colorScale = d3.scaleSequential(d3.interpolateRgbBasis(['#111827', '#1a2236', '#38bdf8', '#34d399']))
+    .domain([0, maxVal]);
+
+  const x = d3.scaleBand().domain(tools).range([0, w]);
+  const y = d3.scaleBand().domain(tools).range([0, h]);
+
+  g.selectAll('rect').data(DATA.heatmap.data).join('rect')
+    .attr('x', d => x(d.tool2))
+    .attr('y', d => y(d.tool1))
+    .attr('width', cellSize - 2)
+    .attr('height', cellSize - 2)
+    .attr('rx', 4)
+    .attr('fill', d => d.tool1 === d.tool2 ? '#1a2236' : colorScale(d.value))
+    .attr('stroke', d => d.tool1 === d.tool2 ? '#38bdf8' : 'none')
+    .attr('stroke-width', d => d.tool1 === d.tool2 ? 1 : 0)
+    .on('mouseover', (evt, d) => {
+      showTip(evt, d.tool1 === d.tool2
+        ? `<strong>${d.tool1}</strong><br>Mentioned in ${d.value} postings`
+        : `<strong>${d.tool1}</strong> + <strong>${d.tool2}</strong><br>Co-mentioned: ${d.value} times`);
+    })
+    .on('mousemove', (evt) => { tooltip.style('left', (evt.clientX+14)+'px').style('top', (evt.clientY-10)+'px'); })
+    .on('mouseout', hideTip);
+
+  // Values in cells
+  g.selectAll('.cell-text').data(DATA.heatmap.data.filter(d => d.value > 0)).join('text')
+    .attr('x', d => x(d.tool2) + cellSize / 2 - 1)
+    .attr('y', d => y(d.tool1) + cellSize / 2)
+    .attr('dy', '0.35em')
+    .attr('text-anchor', 'middle')
+    .attr('fill', d => d.value > maxVal * 0.5 ? '#0a0e17' : '#94a3b8')
+    .attr('font-size', cellSize > 40 ? '0.7rem' : '0.6rem')
+    .attr('font-weight', d => d.tool1 === d.tool2 ? '700' : '400')
+    .text(d => d.value);
+
+  // Axes
+  g.append('g').attr('transform', `translate(0,${h})`).call(d3.axisBottom(x).tickSize(0))
+    .selectAll('text').attr('fill', '#94a3b8').attr('font-size', '0.68rem')
+    .attr('transform', 'rotate(-45)').attr('text-anchor', 'end').attr('dx', '-0.5em').attr('dy', '0.3em');
+  g.append('g').call(d3.axisLeft(y).tickSize(0))
+    .selectAll('text').attr('fill', '#94a3b8').attr('font-size', '0.68rem');
+  g.selectAll('.domain').remove();
+})();
+
+// 5. LOLLIPOP
+(function(){
+  const container = d3.select('#lollipop-chart');
+  const W = Math.min(container.node().getBoundingClientRect().width, 600);
+  const margin = { top: 20, right: 40, bottom: 40, left: 180 };
+  const roles = DATA.lollipop;
+  const barH = 36;
+  const h = roles.length * barH;
+
+  const svg = container.append('svg').attr('width', W).attr('height', h + margin.top + margin.bottom);
+  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+  const w = W - margin.left - margin.right;
+  const x = d3.scaleLinear().domain([0, d3.max(roles, d => d.max_high) * 1.05]).range([0, w]);
+  const y = d3.scaleBand().domain(roles.map(d => d.role)).range([0, h]).padding(0.35);
+
+  // Grid
+  x.ticks(5).forEach(t => {
+    g.append('line').attr('x1', x(t)).attr('x2', x(t)).attr('y1', 0).attr('y2', h)
+      .attr('stroke', '#1e293b').attr('stroke-dasharray', '2,4');
+  });
+
+  g.append('g').attr('transform', `translate(0,${h})`).call(d3.axisBottom(x).ticks(5).tickFormat(d => '$' + d))
+    .selectAll('text').attr('fill', '#94a3b8').attr('font-size', '0.72rem');
+  g.append('g').call(d3.axisLeft(y).tickSize(0))
+    .selectAll('text').attr('fill', '#94a3b8').attr('font-size', '0.72rem');
+  g.selectAll('.domain').remove();
+
+  // Range bars
+  g.selectAll('.range-bar').data(roles).join('line')
+    .attr('x1', d => x(d.min_low)).attr('x2', d => x(d.max_high))
+    .attr('y1', d => y(d.role) + y.bandwidth() / 2)
+    .attr('y2', d => y(d.role) + y.bandwidth() / 2)
+    .attr('stroke', '#38bdf8').attr('stroke-width', 3).attr('stroke-opacity', 0.3)
+    .attr('stroke-linecap', 'round');
+
+  // Avg dots
+  g.selectAll('.avg-dot').data(roles).join('circle')
+    .attr('cx', d => x(d.avg))
+    .attr('cy', d => y(d.role) + y.bandwidth() / 2)
+    .attr('r', 7)
+    .attr('fill', '#38bdf8')
+    .attr('stroke', '#0a0e17').attr('stroke-width', 2)
+    .on('mouseover', (evt, d) => {
+      showTip(evt, `<strong>${d.role}</strong><br>Range: $${d.min_low} – $${d.max_high}/hr<br><span class="pay">Avg: $${d.avg}/hr</span><br>n=${d.count} postings`);
+    })
+    .on('mousemove', (evt) => { tooltip.style('left', (evt.clientX+14)+'px').style('top', (evt.clientY-10)+'px'); })
+    .on('mouseout', hideTip);
+
+  // Avg labels
+  g.selectAll('.avg-label').data(roles).join('text')
+    .attr('x', d => x(d.avg) + 12)
+    .attr('y', d => y(d.role) + y.bandwidth() / 2)
+    .attr('dy', '0.35em')
+    .attr('fill', '#e2e8f0').attr('font-size', '0.72rem').attr('font-weight', '700')
+    .attr('font-family', "'Space Mono', monospace")
+    .text(d => '$' + d.avg);
+})();
+
+// 6. TREEMAP
+(function(){
+  const container = d3.select('#treemap-chart');
+  const W = container.node().getBoundingClientRect().width;
+  const H = 500;
+
+  const svg = container.append('svg').attr('width', W).attr('height', H);
+
+  const root = d3.hierarchy(DATA.treemap)
+    .sum(d => d.value || 0)
+    .sort((a, b) => b.value - a.value);
+
+  d3.treemap().size([W, H]).padding(2).paddingTop(22).round(true)(root);
+
+  const industryColor = d3.scaleOrdinal()
+    .domain(DATA.bubble_industries)
+    .range(COLORS);
+
+  // Industry groups
+  const cell = svg.selectAll('.tm-leaf')
+    .data(root.leaves()).join('g')
+    .attr('class', 'tm-leaf')
+    .attr('transform', d => `translate(${d.x0},${d.y0})`);
+
+  cell.append('rect')
+    .attr('width', d => d.x1 - d.x0)
+    .attr('height', d => d.y1 - d.y0)
+    .attr('rx', 4)
+    .attr('fill', d => {
+      let p = d;
+      while (p.depth > 1) p = p.parent;
+      return industryColor(p.data.name);
+    })
+    .attr('fill-opacity', 0.6)
+    .attr('stroke', '#0a0e17')
+    .attr('stroke-width', 1)
+    .on('mouseover', function(evt, d) {
+      d3.select(this).attr('fill-opacity', 0.9);
+      const path = [];
+      let p = d;
+      while (p.parent) { path.unshift(p.data.name); p = p.parent; }
+      showTip(evt, `<strong>${path.join(' → ')}</strong><br>Count: ${d.value}`);
+    })
+    .on('mousemove', (evt) => { tooltip.style('left', (evt.clientX+14)+'px').style('top', (evt.clientY-10)+'px'); })
+    .on('mouseout', function() { d3.select(this).attr('fill-opacity', 0.6); hideTip(); });
+
+  cell.append('text')
+    .attr('x', 4).attr('y', 14)
+    .attr('fill', '#e2e8f0')
+    .attr('font-size', d => (d.x1 - d.x0) > 60 && (d.y1 - d.y0) > 20 ? '0.6rem' : '0')
+    .attr('font-weight', '500')
+    .text(d => {
+      const w = d.x1 - d.x0;
+      const name = d.data.name;
+      return w > 80 ? name : name.substring(0, Math.floor(w / 6));
+    });
+
+  // Industry labels (depth 1)
+  const d1 = root.children || [];
+  d1.forEach(node => {
+    svg.append('text')
+      .attr('x', node.x0 + 4).attr('y', node.y0 + 14)
+      .attr('fill', '#e2e8f0')
+      .attr('font-size', '0.7rem')
+      .attr('font-weight', '700')
+      .text(node.data.name);
+  });
+
+  // Legend
+  const leg = container.append('div').attr('class', 'legend').style('margin-top', '1rem');
+  d1.forEach(node => {
+    const item = leg.append('div').attr('class', 'legend-item');
+    item.append('div').attr('class', 'legend-dot').style('background', industryColor(node.data.name));
+    item.append('span').text(node.data.name);
+  });
+})();
+</script>
+</body>
+</html>
