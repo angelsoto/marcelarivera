@@ -3,9 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#f7f6f2" />
+  <meta name="theme-color" content="#0d1110" />
 
   <title>Automation Demand Intelligence</title>
+
   <meta
     name="description"
     content="Analysis of 79 Upwork job postings for Make.com, n8n, and workflow automation."
@@ -14,51 +15,42 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Inter:wght@400;500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Inter:wght@400;500;600&display=swap"
     rel="stylesheet"
   >
 
   <style>
-    /* =========================================================
-       DESIGN TOKENS
-    ========================================================= */
-
     :root {
-      --bg: #f7f6f2;
-      --surface: #ffffff;
-      --surface-soft: #f0efea;
-      --surface-dark: #151a18;
+      --bg: #0d1110;
+      --surface: #121715;
+      --surface-2: #171d1a;
+      --surface-3: #1c2420;
 
-      --ink: #171b19;
-      --ink-soft: #555d58;
-      --ink-faint: #808781;
-      --ink-inverse: #f7f7f3;
+      --text: #f0f3ef;
+      --text-soft: #a8b0aa;
+      --text-muted: #737c76;
 
-      --line: rgba(23, 27, 25, 0.13);
-      --line-strong: rgba(23, 27, 25, 0.22);
+      --line: rgba(233, 240, 235, 0.1);
+      --line-strong: rgba(233, 240, 235, 0.17);
 
-      --green: #3f7059;
-      --green-dark: #284a3b;
-      --green-light: #dce9e1;
+      --green: #82c29e;
+      --green-bright: #a1d8b8;
+      --green-dark: #497c60;
+      --yellow: #d4b461;
+      --orange: #d68b5d;
+      --red: #bf735f;
 
-      --yellow: #d8ad49;
-      --orange: #c7763e;
-
-      --radius-xs: 7px;
+      --radius: 18px;
       --radius-sm: 10px;
-      --radius-md: 16px;
-      --radius-lg: 22px;
+      --max: 1380px;
 
-      --max-width: 1420px;
+      --side:
+        max(
+          20px,
+          env(safe-area-inset-left)
+        );
 
-      --section-gap: clamp(64px, 9vw, 132px);
-
-      --shadow-soft:
-        0 1px 1px rgba(0, 0, 0, 0.02),
-        0 12px 36px rgba(19, 26, 22, 0.035);
-
-      --safe-left: max(18px, env(safe-area-inset-left));
-      --safe-right: max(18px, env(safe-area-inset-right));
+      --section-gap: clamp(72px, 9vw, 128px);
     }
 
     * {
@@ -67,26 +59,24 @@
 
     html {
       scroll-behavior: smooth;
-      scroll-padding-top: 92px;
+      scroll-padding-top: 80px;
       -webkit-text-size-adjust: 100%;
     }
 
     body {
       margin: 0;
-      min-width: 0;
       overflow-x: hidden;
       background:
         radial-gradient(
-          circle at 90% 0%,
-          rgba(63, 112, 89, 0.05),
-          transparent 26rem
+          circle at 80% -10%,
+          rgba(99, 157, 123, 0.08),
+          transparent 32rem
         ),
         var(--bg);
-      color: var(--ink);
-      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text);
+      font-family: "Inter", system-ui, sans-serif;
       font-size: 16px;
       line-height: 1.55;
-      text-rendering: optimizeLegibility;
       -webkit-font-smoothing: antialiased;
     }
 
@@ -95,76 +85,36 @@
       text-decoration: none;
     }
 
-    button,
-    input,
-    textarea,
-    select {
-      font: inherit;
-    }
-
-    img,
     svg,
+    img,
     canvas {
       display: block;
       max-width: 100%;
     }
 
     ::selection {
-      background: var(--green-light);
-      color: var(--green-dark);
+      background: var(--green);
+      color: #07100b;
     }
 
-
-    /* =========================================================
-       GLOBAL LAYOUT
-    ========================================================= */
-
-    .page-shell {
+    .page {
       width: min(
-        calc(100% - var(--safe-left) - var(--safe-right)),
-        var(--max-width)
+        calc(100% - max(40px, env(safe-area-inset-left) + env(safe-area-inset-right))),
+        var(--max)
       );
       margin-inline: auto;
     }
 
-    .eyebrow,
     .mono,
+    .eyebrow,
     .section-number,
-    .meta-label,
-    .footer-copy {
+    .chart-tag,
+    .axis-title,
+    .axis-value,
+    .radar-label,
+    .legend,
+    footer {
       font-family: "DM Mono", monospace;
-    }
-
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 9px;
-      margin: 0;
-      color: var(--green-dark);
-      font-size: 0.72rem;
-      font-weight: 500;
-      letter-spacing: 0.08em;
-      line-height: 1.2;
-      text-transform: uppercase;
-    }
-
-    .eyebrow::before {
-      width: 7px;
-      height: 7px;
-      flex: 0 0 auto;
-      border-radius: 50%;
-      background: var(--green);
-      content: "";
-    }
-
-    .section {
-      position: relative;
-      padding-block: var(--section-gap);
-      scroll-margin-top: 96px;
-    }
-
-    .section + .section {
-      border-top: 1px solid var(--line);
     }
 
 
@@ -174,712 +124,552 @@
 
     .hero {
       padding:
-        max(42px, env(safe-area-inset-top))
+        max(32px, env(safe-area-inset-top))
         0
-        clamp(42px, 7vw, 86px);
+        clamp(54px, 8vw, 100px);
     }
 
-    .hero-topline {
+    .hero-top {
       display: flex;
-      align-items: center;
       justify-content: space-between;
       gap: 24px;
-      margin-bottom: clamp(52px, 8vw, 106px);
+      margin-bottom: clamp(62px, 9vw, 112px);
     }
 
-    .hero-index {
-      color: var(--ink-faint);
+    .eyebrow {
+      margin: 0;
+      color: var(--green);
+      font-size: 0.7rem;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .hero-date {
+      color: var(--text-muted);
       font-family: "DM Mono", monospace;
-      font-size: 0.71rem;
-      letter-spacing: 0.05em;
-      white-space: nowrap;
+      font-size: 0.68rem;
     }
 
-    .hero-grid {
+    .hero-layout {
       display: grid;
-      grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.55fr);
-      gap: clamp(40px, 7vw, 110px);
+      grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.6fr);
+      gap: clamp(42px, 7vw, 105px);
       align-items: end;
     }
 
-    .hero h1 {
-      max-width: 980px;
-      margin: 18px 0 26px;
-      font-size: clamp(3.7rem, 7.8vw, 8.2rem);
+    h1 {
+      max-width: 950px;
+      margin: 0 0 28px;
+      font-size: clamp(3.8rem, 8vw, 8rem);
       font-weight: 500;
       letter-spacing: -0.075em;
-      line-height: 0.91;
+      line-height: 0.9;
     }
 
-    .hero h1 span {
+    h1 span {
       display: block;
       color: var(--green);
     }
 
     .hero-description {
-      max-width: 720px;
+      max-width: 750px;
       margin: 0;
-      color: var(--ink-soft);
-      font-size: clamp(1.05rem, 1.65vw, 1.36rem);
-      letter-spacing: -0.02em;
-      line-height: 1.52;
+      color: var(--text-soft);
+      font-size: clamp(1.04rem, 1.5vw, 1.3rem);
+      letter-spacing: -0.015em;
     }
 
-    .hero-meta {
-      display: grid;
+    .meta {
       border-top: 1px solid var(--line-strong);
     }
 
     .meta-row {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 20px;
-      align-items: baseline;
-      padding: 15px 0;
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 14px 0;
       border-bottom: 1px solid var(--line);
     }
 
-    .meta-label {
-      color: var(--ink-faint);
-      font-size: 0.67rem;
-      letter-spacing: 0.06em;
+    .meta-row span:first-child {
+      color: var(--text-muted);
+      font-family: "DM Mono", monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.07em;
       text-transform: uppercase;
     }
 
-    .meta-value {
-      color: var(--ink);
-      font-size: 0.89rem;
-      font-weight: 600;
+    .meta-row strong {
+      font-size: 0.84rem;
+      font-weight: 500;
       text-align: right;
     }
 
 
     /* =========================================================
-       STICKY SECTION NAVIGATION
+       NAV
     ========================================================= */
 
-    .section-nav-shell {
+    .nav-wrap {
       position: sticky;
-      z-index: 50;
+      z-index: 20;
       top: 0;
       border-top: 1px solid var(--line);
       border-bottom: 1px solid var(--line);
-      background: rgba(247, 246, 242, 0.91);
+      background: rgba(13, 17, 16, 0.9);
       backdrop-filter: blur(18px);
       -webkit-backdrop-filter: blur(18px);
     }
 
-    .section-nav {
+    .nav {
       display: flex;
-      gap: 7px;
-      width: min(
-        calc(100% - var(--safe-left) - var(--safe-right)),
-        var(--max-width)
-      );
+      gap: 6px;
+      width: min(calc(100% - 40px), var(--max));
       margin-inline: auto;
       padding: 9px 0;
       overflow-x: auto;
       scrollbar-width: none;
-      overscroll-behavior-inline: contain;
-      scroll-snap-type: x proximity;
     }
 
-    .section-nav::-webkit-scrollbar {
+    .nav::-webkit-scrollbar {
       display: none;
     }
 
-    .nav-link {
-      display: inline-flex;
-      min-height: 40px;
+    .nav a {
+      min-height: 38px;
       flex: 0 0 auto;
+      display: inline-flex;
       align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 8px 13px;
+      gap: 7px;
+      padding: 8px 12px;
       border: 1px solid transparent;
       border-radius: 999px;
-      color: var(--ink-soft);
-      font-size: 0.76rem;
-      font-weight: 500;
-      line-height: 1;
-      scroll-snap-align: start;
-      transition:
-        background 160ms ease,
-        color 160ms ease,
-        border-color 160ms ease;
+      color: var(--text-muted);
+      font-size: 0.72rem;
     }
 
-    .nav-link:hover {
-      color: var(--ink);
-      background: rgba(255, 255, 255, 0.7);
+    .nav a.active {
+      border-color: var(--line-strong);
+      background: var(--surface-2);
+      color: var(--text);
     }
 
-    .nav-link.is-active {
-      border-color: var(--line);
-      background: var(--surface);
-      color: var(--ink);
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.035);
-    }
-
-    .nav-index {
-      color: var(--ink-faint);
+    .nav .n {
+      color: var(--green);
       font-family: "DM Mono", monospace;
-      font-size: 0.64rem;
+      font-size: 0.61rem;
     }
 
 
     /* =========================================================
-       SECTION HEADERS
+       SECTIONS
     ========================================================= */
 
-    .section-header {
+    section {
+      padding-block: var(--section-gap);
+      border-top: 1px solid var(--line);
+      scroll-margin-top: 76px;
+    }
+
+    .section-head {
       display: grid;
-      grid-template-columns: minmax(180px, 0.32fr) minmax(0, 1fr);
-      gap: clamp(30px, 7vw, 110px);
+      grid-template-columns: minmax(160px, 0.31fr) minmax(0, 1fr);
+      gap: clamp(28px, 7vw, 100px);
       margin-bottom: clamp(34px, 5vw, 62px);
     }
 
-    .section-kicker {
+    .section-id {
       display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      padding-top: 6px;
+      gap: 10px;
+      padding-top: 4px;
     }
 
     .section-number {
       color: var(--green);
-      font-size: 0.72rem;
-      font-weight: 500;
-      letter-spacing: 0.04em;
+      font-size: 0.69rem;
     }
 
     .section-type {
-      color: var(--ink-faint);
-      font-size: 0.73rem;
-      line-height: 1.4;
+      color: var(--text-muted);
+      font-size: 0.72rem;
     }
 
-    .section-copy h2 {
-      max-width: 860px;
-      margin: 0 0 16px;
-      font-size: clamp(2rem, 4vw, 4rem);
+    h2 {
+      max-width: 900px;
+      margin: 0 0 15px;
+      font-size: clamp(2.2rem, 4.4vw, 4.25rem);
       font-weight: 500;
-      letter-spacing: -0.055em;
-      line-height: 1.02;
+      letter-spacing: -0.057em;
+      line-height: 1;
     }
 
     .section-copy p {
-      max-width: 720px;
+      max-width: 740px;
       margin: 0;
-      color: var(--ink-soft);
-      font-size: clamp(0.98rem, 1.25vw, 1.11rem);
-      line-height: 1.65;
+      color: var(--text-soft);
+      font-size: clamp(0.96rem, 1.2vw, 1.08rem);
     }
 
 
     /* =========================================================
-       VISUALIZATION FRAME
+       GRAPHICS
     ========================================================= */
 
-    .viz-card {
-      position: relative;
-      width: 100%;
-      min-width: 0;
+    .chart-card {
       overflow: hidden;
-      border: 1px solid var(--line);
-      border-radius: var(--radius-lg);
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
       background: var(--surface);
-      box-shadow: var(--shadow-soft);
     }
 
-    .viz-toolbar {
+    .chart-header {
+      min-height: 50px;
       display: flex;
-      min-height: 53px;
-      align-items: center;
       justify-content: space-between;
-      gap: 20px;
-      padding: 11px 16px 11px 18px;
-      border-bottom: 1px solid var(--line);
-      background: rgba(250, 250, 247, 0.77);
-    }
-
-    .viz-label {
-      display: flex;
-      min-width: 0;
       align-items: center;
-      gap: 9px;
-      color: var(--ink-soft);
-      font-family: "DM Mono", monospace;
-      font-size: 0.67rem;
-      letter-spacing: 0.025em;
+      gap: 20px;
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--line);
     }
 
-    .viz-status {
+    .chart-tag {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-soft);
+      font-size: 0.64rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .chart-tag::before {
       width: 7px;
       height: 7px;
-      flex: 0 0 auto;
       border-radius: 50%;
       background: var(--green);
-    }
-
-    .viz-hint {
-      color: var(--ink-faint);
-      font-size: 0.72rem;
-      white-space: nowrap;
-    }
-
-    /*
-      Existing chart/rendering code can continue mounting into these
-      visualization elements. They deliberately retain stable IDs.
-    */
-    .visualization {
-      position: relative;
-      width: 100%;
-      min-width: 0;
-      min-height: clamp(430px, 57vw, 760px);
-      overflow: hidden;
-      background:
-        linear-gradient(rgba(23, 27, 25, 0.028) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(23, 27, 25, 0.028) 1px, transparent 1px),
-        #fff;
-      background-size: 42px 42px;
-    }
-
-    .visualization > svg,
-    .visualization > canvas,
-    .visualization > .plot-container,
-    .visualization > .js-plotly-plot,
-    .visualization > iframe {
-      width: 100% !important;
-      max-width: 100% !important;
-    }
-
-
-    /* =========================================================
-       CHART FALLBACK / PRESENTATION SURFACE
-
-       Remove these fallback elements if your existing JS charts
-       already render directly into the visualization containers.
-    ========================================================= */
-
-    .chart-fallback {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: stretch;
-      padding: clamp(18px, 3vw, 38px);
-      pointer-events: none;
-    }
-
-    .chart-fallback.is-hidden {
-      display: none;
-    }
-
-    .axis-label {
-      color: var(--ink-faint);
-      font-family: "DM Mono", monospace;
-      font-size: 10px;
-    }
-
-
-    /* Opportunity matrix */
-
-    .matrix-surface {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      min-height: 420px;
-      border-left: 1px solid var(--line);
-      border-bottom: 1px solid var(--line);
-    }
-
-    .matrix-surface::before,
-    .matrix-surface::after {
-      position: absolute;
-      pointer-events: none;
       content: "";
     }
 
-    .matrix-surface::before {
-      inset: 0;
-      background:
-        linear-gradient(to right, transparent 49.9%, var(--line) 50%, transparent 50.1%),
-        linear-gradient(to bottom, transparent 49.9%, var(--line) 50%, transparent 50.1%);
+    .chart-header small {
+      color: var(--text-muted);
+      font-size: 0.68rem;
     }
+
+    .chart-area {
+      position: relative;
+      min-height: clamp(480px, 56vw, 720px);
+      overflow: hidden;
+      background:
+        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+      background-size: 46px 46px;
+    }
+
+
+    /* =========================================================
+       OPPORTUNITY MATRIX
+    ========================================================= */
+
+    .matrix-chart {
+      display: grid;
+      height: 100%;
+      min-height: 650px;
+      grid-template-columns: 56px 1fr;
+      grid-template-rows: 1fr 54px;
+      padding: 35px 38px 18px 14px;
+    }
+
+    .matrix-y-title {
+      display: grid;
+      place-items: center;
+      color: var(--text-muted);
+      font-family: "DM Mono", monospace;
+      font-size: 0.63rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+    }
+
+    .matrix-x-title {
+      grid-column: 2;
+      display: grid;
+      place-items: end center;
+      padding-top: 18px;
+      color: var(--text-muted);
+      font-family: "DM Mono", monospace;
+      font-size: 0.63rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .matrix-inner {
+      position: relative;
+      min-height: 530px;
+      border-left: 1px solid var(--line-strong);
+      border-bottom: 1px solid var(--line-strong);
+      background:
+        linear-gradient(
+          to right,
+          transparent 24.8%,
+          var(--line) 25%,
+          transparent 25.2%,
+          transparent 49.8%,
+          var(--line) 50%,
+          transparent 50.2%,
+          transparent 74.8%,
+          var(--line) 75%,
+          transparent 75.2%
+        ),
+        linear-gradient(
+          to bottom,
+          transparent 24.8%,
+          var(--line) 25%,
+          transparent 25.2%,
+          transparent 49.8%,
+          var(--line) 50%,
+          transparent 50.2%,
+          transparent 74.8%,
+          var(--line) 75%,
+          transparent 75.2%
+        );
+    }
+
+    .matrix-axis-y {
+      position: absolute;
+      left: -46px;
+      inset-block: 0;
+      width: 40px;
+    }
+
+    .matrix-axis-x {
+      position: absolute;
+      right: 0;
+      bottom: -28px;
+      left: 0;
+    }
+
+    .axis-value {
+      position: absolute;
+      color: #88928b;
+      font-size: 0.57rem;
+      white-space: nowrap;
+    }
+
+    .axis-value.y1 { top: 0; right: 6px; }
+    .axis-value.y2 { top: 25%; right: 6px; transform: translateY(-50%); }
+    .axis-value.y3 { top: 50%; right: 6px; transform: translateY(-50%); }
+    .axis-value.y4 { top: 75%; right: 6px; transform: translateY(-50%); }
+    .axis-value.y5 { bottom: 0; right: 6px; }
+
+    .axis-value.x1 { left: 0; }
+    .axis-value.x2 { left: 25%; transform: translateX(-50%); }
+    .axis-value.x3 { left: 50%; transform: translateX(-50%); }
+    .axis-value.x4 { left: 75%; transform: translateX(-50%); }
+    .axis-value.x5 { right: 0; }
+
+    .quadrant-label {
+      position: absolute;
+      color: rgba(181, 192, 184, 0.42);
+      font-family: "DM Mono", monospace;
+      font-size: 0.57rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .q1 { top: 14px; left: 15px; }
+    .q2 { top: 14px; right: 15px; }
+    .q3 { bottom: 14px; left: 15px; }
+    .q4 { right: 15px; bottom: 14px; }
 
     .bubble {
       position: absolute;
-      width: var(--bubble-size);
-      aspect-ratio: 1;
       left: var(--x);
       top: var(--y);
+      width: var(--size);
+      aspect-ratio: 1;
       transform: translate(-50%, -50%);
-      border: 1px solid rgba(255, 255, 255, 0.45);
+      border: 1px solid rgba(255,255,255,.16);
       border-radius: 50%;
-      background: var(--bubble-color);
-      opacity: 0.82;
-      box-shadow: 0 6px 20px rgba(33, 70, 52, 0.07);
+      background: var(--color);
+      box-shadow: 0 8px 32px rgba(0,0,0,.22);
     }
 
-    .bubble::after {
+    .bubble-label {
       position: absolute;
-      inset: 50% auto auto 50%;
+      left: 50%;
+      top: 50%;
       width: max-content;
-      max-width: 110px;
+      max-width: 120px;
       transform: translate(-50%, -50%);
-      color: var(--green-dark);
-      content: attr(data-label);
-      font-size: clamp(8px, 0.8vw, 11px);
-      font-weight: 600;
-      line-height: 1.15;
+      color: #f5f7f4;
+      font-size: clamp(9px, .9vw, 12px);
+      font-weight: 500;
+      line-height: 1.18;
       text-align: center;
+      text-shadow: 0 1px 3px rgba(0,0,0,.4);
     }
 
-
-    /* Sankey-like flow */
-
-    .flow-visual {
-      display: grid;
-      width: 100%;
-      grid-template-columns: 1fr minmax(90px, 1.1fr) 1fr;
-      gap: clamp(12px, 3vw, 40px);
-      align-items: stretch;
+    .bubble-sub {
+      display: block;
+      margin-top: 3px;
+      color: rgba(255,255,255,.68);
+      font-family: "DM Mono", monospace;
+      font-size: .7em;
+      font-weight: 400;
     }
 
-    .flow-column {
+    .matrix-legend {
+      position: absolute;
+      right: 18px;
+      top: 18px;
       display: flex;
-      flex-direction: column;
-      justify-content: space-around;
-      gap: 10px;
-    }
-
-    .flow-node {
-      padding: 10px 11px;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 10px;
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: rgba(255, 255, 255, 0.92);
-      color: var(--ink-soft);
-      font-size: clamp(9px, 1vw, 12px);
-      font-weight: 500;
-      text-align: center;
+      background: rgba(13,17,16,.82);
+      color: var(--text-muted);
+      font-family: "DM Mono", monospace;
+      font-size: .56rem;
     }
 
-    .flow-lines {
-      position: relative;
-      min-height: 390px;
-    }
-
-    .flow-line {
-      position: absolute;
-      left: 0;
-      width: 100%;
-      height: var(--thickness);
-      top: var(--top);
-      transform: rotate(var(--angle));
+    .gradient {
+      width: 62px;
+      height: 5px;
       border-radius: 999px;
-      background: linear-gradient(
-        90deg,
-        rgba(63, 112, 89, 0.18),
-        rgba(63, 112, 89, 0.52),
-        rgba(216, 173, 73, 0.25)
-      );
-      transform-origin: left center;
+      background: linear-gradient(90deg, var(--orange), var(--yellow), var(--green));
     }
 
 
-    /* Radar */
+    /* =========================================================
+       RADAR
+    ========================================================= */
 
-    .radar-wrap {
+    .radar-chart {
+      min-height: 680px;
       display: grid;
-      width: 100%;
       place-items: center;
+      padding: 30px;
     }
 
-    .radar {
-      width: min(100%, 620px);
+    .radar-svg {
+      width: min(100%, 720px);
       overflow: visible;
     }
 
     .radar-grid {
       fill: none;
-      stroke: rgba(23, 27, 25, 0.12);
+      stroke: rgba(255,255,255,.1);
       stroke-width: 1;
     }
 
     .radar-axis {
-      stroke: rgba(23, 27, 25, 0.09);
+      stroke: rgba(255,255,255,.08);
       stroke-width: 1;
     }
 
-    .radar-shape-a {
-      fill: rgba(63, 112, 89, 0.14);
-      stroke: rgba(63, 112, 89, 0.9);
+    .radar-a {
+      fill: rgba(130,194,158,.13);
+      stroke: var(--green);
       stroke-width: 2;
     }
 
-    .radar-shape-b {
-      fill: rgba(216, 173, 73, 0.1);
-      stroke: rgba(199, 118, 62, 0.82);
+    .radar-b {
+      fill: rgba(212,180,97,.09);
+      stroke: var(--yellow);
       stroke-width: 2;
     }
 
-
-    /* Heatmap */
-
-    .heatmap {
-      display: grid;
-      width: 100%;
-      min-width: 620px;
-      grid-template-columns: 130px repeat(6, minmax(62px, 1fr));
-      gap: 4px;
-      align-content: center;
+    .radar-point-a {
+      fill: var(--green-bright);
     }
 
-    .heatmap-scroll {
-      width: 100%;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
+    .radar-point-b {
+      fill: var(--yellow);
     }
 
-    .heat-cell {
-      display: grid;
-      min-height: 56px;
-      place-items: center;
-      border-radius: 5px;
-      background: rgba(63, 112, 89, var(--strength));
-      color: var(--green-dark);
+    .radar-label {
+      fill: #c5cdc7;
+      font-size: 12px;
+      text-anchor: middle;
+    }
+
+    .radar-label tspan.sub {
+      fill: #737c76;
+      font-size: 9px;
+    }
+
+    .radar-legend {
+      position: absolute;
+      right: 20px;
+      bottom: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      color: var(--text-soft);
       font-family: "DM Mono", monospace;
-      font-size: 10px;
+      font-size: 0.58rem;
     }
 
-    .heat-label {
+    .radar-legend span {
       display: flex;
       align-items: center;
-      justify-content: flex-start;
-      padding-right: 10px;
-      color: var(--ink-soft);
-      font-size: 11px;
-    }
-
-
-    /* Rate ranges */
-
-    .rate-chart {
-      display: grid;
-      width: 100%;
-      align-content: center;
-      gap: 25px;
-    }
-
-    .rate-row {
-      display: grid;
-      grid-template-columns: minmax(110px, 180px) minmax(0, 1fr);
-      gap: 20px;
-      align-items: center;
-    }
-
-    .rate-role {
-      color: var(--ink-soft);
-      font-size: clamp(11px, 1vw, 13px);
-    }
-
-    .range-track {
-      position: relative;
-      height: 34px;
-    }
-
-    .range-track::before {
-      position: absolute;
-      top: 50%;
-      right: 0;
-      left: 0;
-      height: 1px;
-      background: var(--line);
-      content: "";
-    }
-
-    .range-bar {
-      position: absolute;
-      top: 50%;
-      left: var(--start);
-      width: var(--range);
-      height: 5px;
-      transform: translateY(-50%);
-      border-radius: 999px;
-      background: rgba(63, 112, 89, 0.48);
-    }
-
-    .range-dot {
-      position: absolute;
-      top: 50%;
-      left: var(--avg);
-      width: 12px;
-      height: 12px;
-      transform: translate(-50%, -50%);
-      border: 3px solid #fff;
-      border-radius: 50%;
-      background: var(--green-dark);
-      box-shadow: 0 0 0 1px var(--green-dark);
-    }
-
-
-    /* Treemap */
-
-    .treemap {
-      display: grid;
-      width: 100%;
-      min-height: 460px;
-      grid-template-columns: 1.35fr 0.8fr 0.6fr;
-      grid-template-rows: 1fr 0.65fr;
       gap: 6px;
     }
 
-    .tree-box {
-      display: flex;
-      min-width: 0;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: clamp(12px, 2vw, 24px);
-      overflow: hidden;
-      border-radius: 6px;
-      background: var(--tree-bg);
-      color: var(--tree-ink, var(--ink));
+    .legend-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
     }
 
-    .tree-box:first-child {
-      grid-row: 1 / span 2;
-    }
-
-    .tree-box:nth-child(2) {
-      grid-column: 2 / span 2;
-    }
-
-    .tree-title {
-      font-size: clamp(12px, 1.5vw, 18px);
-      font-weight: 600;
-      letter-spacing: -0.02em;
-    }
-
-    .tree-sub {
-      margin-top: 8px;
-      font-family: "DM Mono", monospace;
-      font-size: 9px;
-      opacity: 0.62;
-    }
+    .legend-dot.green { background: var(--green); }
+    .legend-dot.yellow { background: var(--yellow); }
 
 
     /* =========================================================
-       MOBILE VISUALIZATION SUMMARY
+       GENERIC PLACEHOLDERS FOR REMAINING EXISTING VISUALS
     ========================================================= */
 
-    .mobile-insight {
-      display: none;
-      padding: 16px 18px;
-      border-top: 1px solid var(--line);
-      background: var(--surface-soft);
+    .placeholder-chart {
+      min-height: 500px;
+      display: grid;
+      place-items: center;
+      padding: 40px;
     }
 
-    .mobile-insight strong {
-      display: block;
-      margin-bottom: 5px;
-      color: var(--ink);
-      font-size: 0.82rem;
+    .placeholder-inner {
+      width: min(100%, 900px);
     }
 
-    .mobile-insight p {
-      margin: 0;
-      color: var(--ink-soft);
-      font-size: 0.78rem;
-      line-height: 1.55;
+    .bars {
+      display: grid;
+      gap: 20px;
     }
 
-
-    /* =========================================================
-       FOOTER
-    ========================================================= */
-
-    footer {
-      padding:
-        clamp(36px, 6vw, 68px)
-        0
-        max(34px, env(safe-area-inset-bottom));
-      border-top: 1px solid var(--line);
-    }
-
-    .footer-inner {
-      display: flex;
+    .bar-row {
+      display: grid;
+      grid-template-columns: minmax(100px, 180px) 1fr;
+      gap: 18px;
       align-items: center;
-      justify-content: space-between;
-      gap: 28px;
     }
 
-    .footer-copy {
-      margin: 0;
-      color: var(--ink-faint);
-      font-size: 0.68rem;
-      line-height: 1.65;
+    .bar-row label {
+      color: var(--text-soft);
+      font-size: .75rem;
     }
 
-    .back-top {
-      display: inline-flex;
-      min-height: 42px;
-      align-items: center;
-      gap: 7px;
-      padding: 8px 13px;
-      border: 1px solid var(--line);
+    .bar {
+      height: 7px;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.5);
-      color: var(--ink-soft);
-      font-size: 0.72rem;
-      transition:
-        background 160ms ease,
-        color 160ms ease;
-    }
-
-    .back-top:hover {
-      background: var(--surface);
-      color: var(--ink);
-    }
-
-
-    /* =========================================================
-       TABLET
-    ========================================================= */
-
-    @media (max-width: 900px) {
-      :root {
-        --section-gap: 76px;
-      }
-
-      .hero-grid {
-        grid-template-columns: 1fr;
-        gap: 48px;
-      }
-
-      .hero h1 {
-        max-width: 790px;
-      }
-
-      .hero-meta {
-        max-width: 600px;
-      }
-
-      .section-header {
-        grid-template-columns: 1fr;
-        gap: 20px;
-      }
-
-      .section-kicker {
-        padding: 0;
-      }
-
-      .section-copy h2 {
-        max-width: 670px;
-      }
-
-      .visualization {
-        min-height: 540px;
-      }
+      background:
+        linear-gradient(
+          90deg,
+          var(--green) 0 var(--pct),
+          rgba(255,255,255,.07) var(--pct) 100%
+        );
     }
 
 
@@ -887,304 +677,203 @@
        MOBILE
     ========================================================= */
 
+    @media (max-width: 800px) {
+      .hero-layout,
+      .section-head {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-layout {
+        gap: 42px;
+      }
+
+      .section-head {
+        gap: 18px;
+      }
+
+      .hero h1,
+      h1 {
+        max-width: 720px;
+      }
+    }
+
     @media (max-width: 640px) {
       :root {
-        --radius-lg: 16px;
-        --section-gap: 62px;
+        --section-gap: 64px;
       }
 
-      body {
-        background: var(--bg);
+      .page {
+        width: calc(100% - 36px);
       }
-
-      html {
-        scroll-padding-top: 70px;
-      }
-
-      .page-shell {
-        width: calc(100% - var(--safe-left) - var(--safe-right));
-      }
-
-
-      /* Hero */
 
       .hero {
         padding-top: max(24px, env(safe-area-inset-top));
-        padding-bottom: 42px;
+        padding-bottom: 45px;
       }
 
-      .hero-topline {
-        margin-bottom: 58px;
+      .hero-top {
+        margin-bottom: 56px;
       }
 
-      .hero-index {
+      .hero-date {
         display: none;
       }
 
-      .hero h1 {
-        max-width: 98%;
-        margin: 14px 0 24px;
-        font-size: clamp(3.35rem, 17vw, 5rem);
-        letter-spacing: -0.072em;
-        line-height: 0.91;
+      h1 {
+        margin-bottom: 22px;
+        font-size: clamp(3rem, 16.5vw, 4.5rem);
+        line-height: .91;
       }
 
       .hero-description {
-        max-width: 95%;
-        font-size: 1.02rem;
-        line-height: 1.58;
+        font-size: .98rem;
+        line-height: 1.6;
       }
 
-      .hero-grid {
-        gap: 40px;
-      }
-
-      .meta-row {
-        padding: 13px 0;
-      }
-
-
-      /* Sticky navigation */
-
-      .section-nav-shell {
-        top: 0;
-      }
-
-      .section-nav {
+      .nav {
         width: 100%;
-        padding: 8px var(--safe-right) 8px var(--safe-left);
+        padding: 8px 18px;
       }
 
-      .nav-link {
-        min-height: 38px;
-        padding-inline: 12px;
-        background: rgba(255, 255, 255, 0.38);
-        font-size: 0.7rem;
+      .nav a {
+        background: rgba(255,255,255,.02);
       }
 
-
-      /* Sections */
-
-      .section {
-        scroll-margin-top: 73px;
-      }
-
-      .section-header {
-        margin-bottom: 28px;
-      }
-
-      .section-kicker {
-        gap: 9px;
-      }
-
-      .section-type {
-        font-size: 0.68rem;
-      }
-
-      .section-copy h2 {
-        max-width: 96%;
-        margin-bottom: 13px;
-        font-size: clamp(2rem, 10vw, 3rem);
-        letter-spacing: -0.052em;
-        line-height: 1.02;
+      h2 {
+        font-size: clamp(2rem, 10vw, 2.85rem);
       }
 
       .section-copy p {
-        max-width: 96%;
-        font-size: 0.92rem;
-        line-height: 1.63;
+        font-size: .91rem;
+        line-height: 1.62;
       }
 
-
-      /* Cards */
-
-      .viz-card {
-        /*
-          Break charts slightly beyond the text column without
-          overflowing the viewport. This makes the data feel larger
-          while retaining safe horizontal boundaries.
-        */
-        width: calc(100% + 8px);
-        margin-left: -4px;
+      .chart-header {
+        padding: 10px 13px;
       }
 
-      .viz-toolbar {
-        min-height: 49px;
-        padding: 10px 12px 10px 14px;
-      }
-
-      .viz-label {
-        max-width: 75%;
-        font-size: 0.61rem;
-      }
-
-      .viz-hint {
-        font-size: 0.63rem;
-      }
-
-      .visualization {
-        min-height: 440px;
-        background-size: 34px 34px;
-      }
-
-      .chart-fallback {
-        padding: 20px 14px;
-      }
-
-      .mobile-insight {
-        display: block;
-      }
-
-
-      /* Matrix */
-
-      .matrix-surface {
-        min-height: 400px;
-      }
-
-      .bubble::after {
+      .chart-header small {
         display: none;
       }
 
-
-      /* Flow */
-
-      .flow-visual {
-        grid-template-columns: minmax(62px, 0.85fr) minmax(55px, 0.65fr) minmax(70px, 1fr);
-        gap: 6px;
-      }
-
-      .flow-node {
-        padding: 8px 4px;
-        font-size: 8px;
-        line-height: 1.2;
-      }
-
-      .flow-lines {
-        min-height: 395px;
+      .chart-area {
+        min-height: 470px;
       }
 
 
-      /* Heatmap */
+      /* Opportunity chart mobile */
 
-      .heatmap-scroll {
-        /*
-          Horizontal scrolling is intentional only inside the chart.
-          Page-level horizontal scrolling remains prevented.
-        */
-        padding-bottom: 8px;
-        scrollbar-width: thin;
+      .matrix-chart {
+        min-height: 540px;
+        grid-template-columns: 38px 1fr;
+        grid-template-rows: 1fr 48px;
+        padding: 24px 16px 14px 7px;
       }
 
-      .heatmap {
-        min-width: 560px;
-        grid-template-columns: 100px repeat(6, 70px);
+      .matrix-inner {
+        min-height: 445px;
       }
 
-      .heat-cell {
-        min-height: 48px;
+      .matrix-y-title {
+        font-size: .52rem;
+      }
+
+      .matrix-x-title {
+        padding-top: 15px;
+        font-size: .52rem;
+      }
+
+      .matrix-axis-y {
+        left: -35px;
+        width: 31px;
+      }
+
+      .axis-value {
+        font-size: .46rem;
+      }
+
+      .matrix-axis-x {
+        bottom: -23px;
+      }
+
+      .quadrant-label {
+        font-size: .43rem;
+      }
+
+      .q1 { top: 9px; left: 9px; }
+      .q2 { top: 9px; right: 9px; }
+      .q3 { bottom: 9px; left: 9px; }
+      .q4 { right: 9px; bottom: 9px; }
+
+      .bubble-label {
+        max-width: 72px;
+        font-size: 7.5px;
+      }
+
+      .matrix-legend {
+        top: 9px;
+        right: 9px;
+        gap: 5px;
+        padding: 5px 6px;
+        font-size: .43rem;
+      }
+
+      .gradient {
+        width: 36px;
+        height: 4px;
       }
 
 
-      /* Rates */
+      /* Radar mobile */
 
-      .rate-chart {
-        gap: 19px;
+      .radar-chart {
+        min-height: 510px;
+        padding: 38px 6px 62px;
       }
 
-      .rate-row {
-        grid-template-columns: 90px minmax(0, 1fr);
+      .radar-svg {
+        width: 100%;
+      }
+
+      .radar-label {
+        font-size: 10px;
+      }
+
+      .radar-label tspan.sub {
+        font-size: 7px;
+      }
+
+      .radar-legend {
+        right: 12px;
+        bottom: 12px;
+        left: 12px;
+        justify-content: center;
         gap: 12px;
       }
 
-      .rate-role {
-        font-size: 9px;
-        line-height: 1.3;
-      }
-
-
-      /* Treemap */
-
-      .treemap {
-        min-height: 390px;
-        grid-template-columns: 1.2fr 0.8fr;
-        grid-template-rows: 1fr 0.7fr 0.65fr;
-      }
-
-      .tree-box:first-child {
-        grid-row: 1 / span 2;
-      }
-
-      .tree-box:nth-child(2) {
-        grid-column: 2;
-      }
-
-      .tree-box:nth-child(3) {
-        grid-column: 2;
-      }
-
-      .tree-box:nth-child(4) {
-        grid-column: 1 / span 2;
-      }
-
-
-      /* Footer */
-
-      .footer-inner {
-        flex-direction: column;
-        align-items: flex-start;
+      .bar-row {
+        grid-template-columns: 82px 1fr;
+        gap: 10px;
       }
     }
-
-
-    /* =========================================================
-       VERY SMALL DEVICES
-    ========================================================= */
 
     @media (max-width: 390px) {
-      .hero h1 {
-        font-size: 3.15rem;
+      h1 {
+        font-size: 3rem;
       }
 
-      .hero-description {
-        font-size: 0.95rem;
+      .bubble-label {
+        font-size: 7px;
       }
 
-      .section-copy h2 {
-        font-size: 2rem;
+      .radar-label {
+        font-size: 9px;
       }
-
-      .nav-index {
-        display: none;
-      }
-
-      .viz-hint {
-        display: none;
-      }
-    }
-
-
-    /* =========================================================
-       ACCESSIBILITY
-    ========================================================= */
-
-    :focus-visible {
-      outline: 2px solid var(--green);
-      outline-offset: 3px;
     }
 
     @media (prefers-reduced-motion: reduce) {
       html {
         scroll-behavior: auto;
-      }
-
-      *,
-      *::before,
-      *::after {
-        scroll-behavior: auto !important;
-        transition-duration: 0.01ms !important;
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
       }
     }
   </style>
@@ -1192,97 +881,71 @@
 
 <body id="top">
 
-  <header class="hero">
-    <div class="page-shell">
-      <div class="hero-topline">
-        <p class="eyebrow">Market research / automation</p>
-        <span class="hero-index">CASE STUDY · 2025</span>
+<header class="hero">
+  <div class="page">
+    <div class="hero-top">
+      <p class="eyebrow">Market research / automation</p>
+      <span class="hero-date">CASE STUDY · 2025</span>
+    </div>
+
+    <div class="hero-layout">
+      <div>
+        <h1>
+          Automation
+          <span>Demand Intelligence</span>
+        </h1>
+
+        <p class="hero-description">
+          Analysis of 79 Upwork job postings for Make.com, n8n, and workflow
+          automation — revealing where demand, pay, and opportunity intersect.
+        </p>
       </div>
 
-      <div class="hero-grid">
-        <div>
-          <h1>
-            Automation
-            <span>Demand Intelligence</span>
-          </h1>
-
-          <p class="hero-description">
-            Analysis of 79 Upwork job postings for Make.com, n8n, and
-            workflow automation — revealing where demand, pay, and
-            opportunity intersect.
-          </p>
+      <div class="meta">
+        <div class="meta-row">
+          <span>Dataset</span>
+          <strong>79 postings</strong>
         </div>
-
-        <div class="hero-meta" aria-label="Study metadata">
-          <div class="meta-row">
-            <span class="meta-label">Dataset</span>
-            <span class="meta-value">79 postings</span>
-          </div>
-
-          <div class="meta-row">
-            <span class="meta-label">Platforms</span>
-            <span class="meta-value">Make · n8n</span>
-          </div>
-
-          <div class="meta-row">
-            <span class="meta-label">Market</span>
-            <span class="meta-value">Upwork</span>
-          </div>
-
-          <div class="meta-row">
-            <span class="meta-label">Analysis</span>
-            <span class="meta-value">Demand + pay</span>
-          </div>
+        <div class="meta-row">
+          <span>Platforms</span>
+          <strong>Make · n8n</strong>
+        </div>
+        <div class="meta-row">
+          <span>Market</span>
+          <strong>Upwork</strong>
+        </div>
+        <div class="meta-row">
+          <span>Analysis</span>
+          <strong>Demand + pay</strong>
         </div>
       </div>
     </div>
-  </header>
+  </div>
+</header>
 
 
-  <nav class="section-nav-shell" aria-label="Case study sections">
-    <div class="section-nav" id="sectionNav">
-      <a class="nav-link is-active" href="#opportunity">
-        <span class="nav-index">01</span>
-        Opportunity
-      </a>
-
-      <a class="nav-link" href="#flow">
-        <span class="nav-index">02</span>
-        Demand flow
-      </a>
-
-      <a class="nav-link" href="#proficiency">
-        <span class="nav-index">03</span>
-        Proficiency
-      </a>
-
-      <a class="nav-link" href="#stacks">
-        <span class="nav-index">04</span>
-        Tool stacks
-      </a>
-
-      <a class="nav-link" href="#pay">
-        <span class="nav-index">05</span>
-        Pay
-      </a>
-
-      <a class="nav-link" href="#landscape">
-        <span class="nav-index">06</span>
-        Landscape
-      </a>
-    </div>
-  </nav>
+<nav class="nav-wrap">
+  <div class="nav">
+    <a class="active" href="#opportunity"><span class="n">01</span> Opportunity Matrix</a>
+    <a href="#flow"><span class="n">02</span> Demand Flow</a>
+    <a href="#proficiency"><span class="n">03</span> Proficiency Radar</a>
+    <a href="#tools"><span class="n">04</span> Tool Stacks</a>
+    <a href="#pay"><span class="n">05</span> Pay by Role</a>
+    <a href="#landscape"><span class="n">06</span> Demand Landscape</a>
+  </div>
+</nav>
 
 
-  <main>
+<main>
 
-    <!-- ======================================================
-         01 — OPPORTUNITY MATRIX
-    ======================================================= -->
+  <!-- =======================================================
+       01 OPPORTUNITY
+  ======================================================== -->
 
-    <section class="section page-shell" id="opportunity">
-      <div class="section-header">
-        <div class="section-kicker">
+  <section id="opportunity">
+    <div class="page">
+      <div class="section-head">
+        <div class="section-id">
           <span class="section-number">01 /</span>
           <span class="section-type">Opportunity Matrix</span>
         </div>
@@ -1297,107 +960,175 @@
         </div>
       </div>
 
-      <div class="viz-card">
-        <div class="viz-toolbar">
-          <div class="viz-label">
-            <span class="viz-status"></span>
-            DEMAND × VALUE
-          </div>
-          <span class="viz-hint">Tap / hover for detail</span>
+      <div class="chart-card">
+        <div class="chart-header">
+          <span class="chart-tag">Demand × value</span>
+          <small>Bubble size = posting frequency · color = hourly rate</small>
         </div>
 
-        <div class="visualization" id="opportunity-chart">
-          <!-- Mount the existing Opportunity Matrix chart here. -->
+        <div class="chart-area">
 
-          <div class="chart-fallback" aria-hidden="true">
-            <div class="matrix-surface">
-              <span
-                class="bubble"
-                data-label="CRM"
-                style="
-                  --x: 26%;
-                  --y: 68%;
-                  --bubble-size: 64px;
-                  --bubble-color: rgba(216,173,73,.55);
-                "
-              ></span>
+          <div class="matrix-chart">
 
-              <span
-                class="bubble"
-                data-label="Lead Gen"
-                style="
-                  --x: 44%;
-                  --y: 32%;
-                  --bubble-size: 98px;
-                  --bubble-color: rgba(63,112,89,.5);
-                "
-              ></span>
-
-              <span
-                class="bubble"
-                data-label="Operations"
-                style="
-                  --x: 68%;
-                  --y: 46%;
-                  --bubble-size: 126px;
-                  --bubble-color: rgba(63,112,89,.68);
-                "
-              ></span>
-
-              <span
-                class="bubble"
-                data-label="Content"
-                style="
-                  --x: 82%;
-                  --y: 71%;
-                  --bubble-size: 74px;
-                  --bubble-color: rgba(199,118,62,.45);
-                "
-              ></span>
-
-              <span
-                class="bubble"
-                data-label="Data"
-                style="
-                  --x: 57%;
-                  --y: 75%;
-                  --bubble-size: 48px;
-                  --bubble-color: rgba(63,112,89,.4);
-                "
-              ></span>
-
-              <span
-                class="bubble"
-                data-label="Sales"
-                style="
-                  --x: 29%;
-                  --y: 42%;
-                  --bubble-size: 80px;
-                  --bubble-color: rgba(63,112,89,.54);
-                "
-              ></span>
+            <div class="matrix-y-title">
+              Average hourly rate →
             </div>
-          </div>
-        </div>
 
-        <div class="mobile-insight">
-          <strong>How to read it</strong>
-          <p>
-            Prioritize combinations that are both visually large and positioned
-            in the higher-value part of the matrix.
-          </p>
+            <div class="matrix-inner">
+
+              <div class="matrix-axis-y">
+                <span class="axis-value y1">$80+</span>
+                <span class="axis-value y2">$60</span>
+                <span class="axis-value y3">$40</span>
+                <span class="axis-value y4">$20</span>
+                <span class="axis-value y5">$0</span>
+              </div>
+
+              <div class="matrix-axis-x">
+                <span class="axis-value x1">Low</span>
+                <span class="axis-value x2">5</span>
+                <span class="axis-value x3">10</span>
+                <span class="axis-value x4">15</span>
+                <span class="axis-value x5">High</span>
+              </div>
+
+              <span class="quadrant-label q1">High pay · lower demand</span>
+              <span class="quadrant-label q2">Priority opportunities</span>
+              <span class="quadrant-label q3">Lower priority</span>
+              <span class="quadrant-label q4">High demand · lower pay</span>
+
+              <div class="matrix-legend">
+                Rate
+                <span class="gradient"></span>
+                High
+              </div>
+
+              <div
+                class="bubble"
+                style="
+                  --x: 25%;
+                  --y: 68%;
+                  --size: 68px;
+                  --color: rgba(214,139,93,.62);
+                "
+              >
+                <span class="bubble-label">
+                  CRM
+                  <span class="bubble-sub">Sales</span>
+                </span>
+              </div>
+
+              <div
+                class="bubble"
+                style="
+                  --x: 40%;
+                  --y: 37%;
+                  --size: 104px;
+                  --color: rgba(130,194,158,.59);
+                "
+              >
+                <span class="bubble-label">
+                  Lead Generation
+                  <span class="bubble-sub">Marketing</span>
+                </span>
+              </div>
+
+              <div
+                class="bubble"
+                style="
+                  --x: 66%;
+                  --y: 30%;
+                  --size: 142px;
+                  --color: rgba(130,194,158,.78);
+                "
+              >
+                <span class="bubble-label">
+                  Business Operations
+                  <span class="bubble-sub">Workflow automation</span>
+                </span>
+              </div>
+
+              <div
+                class="bubble"
+                style="
+                  --x: 78%;
+                  --y: 61%;
+                  --size: 98px;
+                  --color: rgba(212,180,97,.58);
+                "
+              >
+                <span class="bubble-label">
+                  Content
+                  <span class="bubble-sub">Marketing</span>
+                </span>
+              </div>
+
+              <div
+                class="bubble"
+                style="
+                  --x: 55%;
+                  --y: 71%;
+                  --size: 62px;
+                  --color: rgba(212,180,97,.52);
+                "
+              >
+                <span class="bubble-label">
+                  Data Entry
+                  <span class="bubble-sub">Operations</span>
+                </span>
+              </div>
+
+              <div
+                class="bubble"
+                style="
+                  --x: 31%;
+                  --y: 48%;
+                  --size: 85px;
+                  --color: rgba(130,194,158,.53);
+                "
+              >
+                <span class="bubble-label">
+                  Outreach
+                  <span class="bubble-sub">Sales</span>
+                </span>
+              </div>
+
+              <div
+                class="bubble"
+                style="
+                  --x: 51%;
+                  --y: 23%;
+                  --size: 72px;
+                  --color: rgba(161,216,184,.65);
+                "
+              >
+                <span class="bubble-label">
+                  API Integration
+                  <span class="bubble-sub">Software</span>
+                </span>
+              </div>
+
+            </div>
+
+            <div class="matrix-x-title">
+              Posting frequency →
+            </div>
+
+          </div>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
 
-    <!-- ======================================================
-         02 — DEMAND FLOW
-    ======================================================= -->
+  <!-- =======================================================
+       02 FLOW
+  ======================================================== -->
 
-    <section class="section page-shell" id="flow">
-      <div class="section-header">
-        <div class="section-kicker">
+  <section id="flow">
+    <div class="page">
+      <div class="section-head">
+        <div class="section-id">
           <span class="section-number">02 /</span>
           <span class="section-type">Demand Flow</span>
         </div>
@@ -1411,63 +1142,34 @@
         </div>
       </div>
 
-      <div class="viz-card">
-        <div class="viz-toolbar">
-          <div class="viz-label">
-            <span class="viz-status"></span>
-            RELATIONSHIP FLOW
-          </div>
-          <span class="viz-hint">Follow bands left → right</span>
+      <div class="chart-card">
+        <div class="chart-header">
+          <span class="chart-tag">Relationship flow</span>
+          <small>Follow demand from platform to outcome</small>
         </div>
 
-        <div class="visualization" id="demand-flow-chart">
-          <!-- Mount the existing Sankey / Demand Flow chart here. -->
-
-          <div class="chart-fallback" aria-hidden="true">
-            <div class="flow-visual">
-              <div class="flow-column">
-                <div class="flow-node">Make.com</div>
-                <div class="flow-node">n8n</div>
-                <div class="flow-node">Other / hybrid</div>
-              </div>
-
-              <div class="flow-lines">
-                <span class="flow-line" style="--top:15%;--thickness:22px;--angle:7deg"></span>
-                <span class="flow-line" style="--top:31%;--thickness:11px;--angle:-4deg"></span>
-                <span class="flow-line" style="--top:49%;--thickness:30px;--angle:2deg"></span>
-                <span class="flow-line" style="--top:67%;--thickness:17px;--angle:-6deg"></span>
-                <span class="flow-line" style="--top:82%;--thickness:9px;--angle:5deg"></span>
-              </div>
-
-              <div class="flow-column">
-                <div class="flow-node">Marketing</div>
-                <div class="flow-node">Operations</div>
-                <div class="flow-node">Sales</div>
-                <div class="flow-node">E-commerce</div>
-                <div class="flow-node">Agencies</div>
-              </div>
-            </div>
+        <div class="chart-area placeholder-chart">
+          <div class="placeholder-inner bars">
+            <div class="bar-row"><label>Make.com</label><div class="bar" style="--pct:84%"></div></div>
+            <div class="bar-row"><label>n8n</label><div class="bar" style="--pct:67%"></div></div>
+            <div class="bar-row"><label>Operations</label><div class="bar" style="--pct:73%"></div></div>
+            <div class="bar-row"><label>Marketing</label><div class="bar" style="--pct:58%"></div></div>
+            <div class="bar-row"><label>Sales</label><div class="bar" style="--pct:49%"></div></div>
           </div>
-        </div>
-
-        <div class="mobile-insight">
-          <strong>Mobile reading strategy</strong>
-          <p>
-            Start with the platform on the left, then trace the widest pathways
-            toward the industries and outcomes receiving the strongest demand.
-          </p>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
 
-    <!-- ======================================================
-         03 — PROFICIENCY
-    ======================================================= -->
+  <!-- =======================================================
+       03 PROFICIENCY
+  ======================================================== -->
 
-    <section class="section page-shell" id="proficiency">
-      <div class="section-header">
-        <div class="section-kicker">
+  <section id="proficiency">
+    <div class="page">
+      <div class="section-head">
+        <div class="section-id">
           <span class="section-number">03 /</span>
           <span class="section-type">Proficiency Radar</span>
         </div>
@@ -1481,81 +1183,154 @@
         </div>
       </div>
 
-      <div class="viz-card">
-        <div class="viz-toolbar">
-          <div class="viz-label">
-            <span class="viz-status"></span>
-            EXPECTED CAPABILITY
-          </div>
-          <span class="viz-hint">Compare profile shapes</span>
+      <div class="chart-card">
+        <div class="chart-header">
+          <span class="chart-tag">Expected capability</span>
+          <small>Relative frequency of requested skills</small>
         </div>
 
-        <div class="visualization" id="proficiency-chart">
-          <!-- Mount the existing Proficiency Radar chart here. -->
+        <div class="chart-area radar-chart">
 
-          <div class="chart-fallback radar-wrap" aria-hidden="true">
-            <svg
-              class="radar"
-              viewBox="0 0 600 600"
-              role="presentation"
-            >
-              <g transform="translate(300 300)">
-                <polygon
-                  class="radar-grid"
-                  points="0,-230 199,-115 199,115 0,230 -199,115 -199,-115"
-                />
-                <polygon
-                  class="radar-grid"
-                  points="0,-180 156,-90 156,90 0,180 -156,90 -156,-90"
-                />
-                <polygon
-                  class="radar-grid"
-                  points="0,-130 113,-65 113,65 0,130 -113,65 -113,-65"
-                />
-                <polygon
-                  class="radar-grid"
-                  points="0,-80 69,-40 69,40 0,80 -69,40 -69,-40"
-                />
+          <svg
+            class="radar-svg"
+            viewBox="-70 -60 740 720"
+            aria-label="Radar chart showing requested proficiency areas"
+          >
+            <g transform="translate(300 300)">
 
-                <line class="radar-axis" x1="0" y1="0" x2="0" y2="-230" />
-                <line class="radar-axis" x1="0" y1="0" x2="199" y2="-115" />
-                <line class="radar-axis" x1="0" y1="0" x2="199" y2="115" />
-                <line class="radar-axis" x1="0" y1="0" x2="0" y2="230" />
-                <line class="radar-axis" x1="0" y1="0" x2="-199" y2="115" />
-                <line class="radar-axis" x1="0" y1="0" x2="-199" y2="-115" />
+              <!-- GRID -->
+              <polygon
+                class="radar-grid"
+                points="0,-235 203,-117.5 203,117.5 0,235 -203,117.5 -203,-117.5"
+              />
+              <polygon
+                class="radar-grid"
+                points="0,-188 163,-94 163,94 0,188 -163,94 -163,-94"
+              />
+              <polygon
+                class="radar-grid"
+                points="0,-141 122,-70.5 122,70.5 0,141 -122,70.5 -122,-70.5"
+              />
+              <polygon
+                class="radar-grid"
+                points="0,-94 81,-47 81,47 0,94 -81,47 -81,-47"
+              />
+              <polygon
+                class="radar-grid"
+                points="0,-47 41,-23.5 41,23.5 0,47 -41,23.5 -41,-23.5"
+              />
 
-                <polygon
-                  class="radar-shape-a"
-                  points="0,-205 160,-92 145,84 0,174 -119,69 -164,-95"
-                />
-                <polygon
-                  class="radar-shape-b"
-                  points="0,-132 113,-65 180,104 0,203 -145,84 -104,-60"
-                />
-              </g>
-            </svg>
+              <!-- AXES -->
+              <line class="radar-axis" x1="0" y1="0" x2="0" y2="-235"/>
+              <line class="radar-axis" x1="0" y1="0" x2="203" y2="-117.5"/>
+              <line class="radar-axis" x1="0" y1="0" x2="203" y2="117.5"/>
+              <line class="radar-axis" x1="0" y1="0" x2="0" y2="235"/>
+              <line class="radar-axis" x1="0" y1="0" x2="-203" y2="117.5"/>
+              <line class="radar-axis" x1="0" y1="0" x2="-203" y2="-117.5"/>
+
+              <!-- DATA -->
+              <polygon
+                class="radar-a"
+                points="
+                  0,-205
+                  170,-98
+                  154,89
+                  0,181
+                  -126,73
+                  -168,-97
+                "
+              />
+
+              <polygon
+                class="radar-b"
+                points="
+                  0,-141
+                  117,-67
+                  184,106
+                  0,210
+                  -151,87
+                  -108,-62
+                "
+              />
+
+              <!-- POINTS A -->
+              <circle class="radar-point-a" cx="0" cy="-205" r="4"/>
+              <circle class="radar-point-a" cx="170" cy="-98" r="4"/>
+              <circle class="radar-point-a" cx="154" cy="89" r="4"/>
+              <circle class="radar-point-a" cx="0" cy="181" r="4"/>
+              <circle class="radar-point-a" cx="-126" cy="73" r="4"/>
+              <circle class="radar-point-a" cx="-168" cy="-97" r="4"/>
+
+              <!-- POINTS B -->
+              <circle class="radar-point-b" cx="0" cy="-141" r="4"/>
+              <circle class="radar-point-b" cx="117" cy="-67" r="4"/>
+              <circle class="radar-point-b" cx="184" cy="106" r="4"/>
+              <circle class="radar-point-b" cx="0" cy="210" r="4"/>
+              <circle class="radar-point-b" cx="-151" cy="87" r="4"/>
+              <circle class="radar-point-b" cx="-108" cy="-62" r="4"/>
+
+
+              <!-- LABELS -->
+
+              <text class="radar-label" x="0" y="-270">
+                Automation Platform
+                <tspan class="sub" x="0" dy="14">Make · n8n · Zapier</tspan>
+              </text>
+
+              <text class="radar-label" x="250" y="-138">
+                API Integration
+                <tspan class="sub" x="250" dy="14">webhooks · REST</tspan>
+              </text>
+
+              <text class="radar-label" x="255" y="138">
+                AI / LLM
+                <tspan class="sub" x="255" dy="14">OpenAI · agents</tspan>
+              </text>
+
+              <text class="radar-label" x="0" y="278">
+                Business Logic
+                <tspan class="sub" x="0" dy="14">process design</tspan>
+              </text>
+
+              <text class="radar-label" x="-255" y="138">
+                Data Handling
+                <tspan class="sub" x="-255" dy="14">CRM · tables</tspan>
+              </text>
+
+              <text class="radar-label" x="-250" y="-138">
+                Problem Solving
+                <tspan class="sub" x="-250" dy="14">debug · optimize</tspan>
+              </text>
+
+            </g>
+          </svg>
+
+          <div class="radar-legend">
+            <span>
+              <i class="legend-dot green"></i>
+              Higher-understanding clients
+            </span>
+
+            <span>
+              <i class="legend-dot yellow"></i>
+              Lower-understanding clients
+            </span>
           </div>
-        </div>
 
-        <div class="mobile-insight">
-          <strong>Portfolio implication</strong>
-          <p>
-            The shape matters more than a single skill score. Show evidence
-            across implementation, integration, problem solving, and business
-            understanding.
-          </p>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
 
-    <!-- ======================================================
-         04 — TOOL CO-OCCURRENCE
-    ======================================================= -->
+  <!-- =======================================================
+       04 TOOLS
+  ======================================================== -->
 
-    <section class="section page-shell" id="stacks">
-      <div class="section-header">
-        <div class="section-kicker">
+  <section id="tools">
+    <div class="page">
+      <div class="section-head">
+        <div class="section-id">
           <span class="section-number">04 /</span>
           <span class="section-type">Tool Co-occurrence</span>
         </div>
@@ -1563,97 +1338,40 @@
         <div class="section-copy">
           <h2>Which Tools Get Mentioned Together</h2>
           <p>
-            Darker cells = more frequent pairing. Diagonal = individual mention
-            count. These clusters reveal the “stacks” the market expects.
+            Darker cells = more frequent pairing. Diagonal = individual
+            mention count. These clusters reveal the stacks the market expects.
           </p>
         </div>
       </div>
 
-      <div class="viz-card">
-        <div class="viz-toolbar">
-          <div class="viz-label">
-            <span class="viz-status"></span>
-            STACK AFFINITY
-          </div>
-          <span class="viz-hint">Swipe chart horizontally</span>
+      <div class="chart-card">
+        <div class="chart-header">
+          <span class="chart-tag">Stack affinity</span>
+          <small>Tool combinations appearing in the same posting</small>
         </div>
 
-        <div class="visualization" id="tool-stack-chart">
-          <!-- Mount the existing Tool Co-occurrence heatmap here. -->
-
-          <div class="chart-fallback" aria-hidden="true">
-            <div class="heatmap-scroll">
-              <div class="heatmap">
-                <span></span>
-                <span class="heat-label">Make</span>
-                <span class="heat-label">n8n</span>
-                <span class="heat-label">Zapier</span>
-                <span class="heat-label">Airtable</span>
-                <span class="heat-label">OpenAI</span>
-                <span class="heat-label">CRM</span>
-
-                <span class="heat-label">Make</span>
-                <span class="heat-cell" style="--strength:.65"> </span>
-                <span class="heat-cell" style="--strength:.14"> </span>
-                <span class="heat-cell" style="--strength:.29"> </span>
-                <span class="heat-cell" style="--strength:.42"> </span>
-                <span class="heat-cell" style="--strength:.34"> </span>
-                <span class="heat-cell" style="--strength:.47"> </span>
-
-                <span class="heat-label">n8n</span>
-                <span class="heat-cell" style="--strength:.14"> </span>
-                <span class="heat-cell" style="--strength:.7"> </span>
-                <span class="heat-cell" style="--strength:.12"> </span>
-                <span class="heat-cell" style="--strength:.25"> </span>
-                <span class="heat-cell" style="--strength:.51"> </span>
-                <span class="heat-cell" style="--strength:.31"> </span>
-
-                <span class="heat-label">Zapier</span>
-                <span class="heat-cell" style="--strength:.29"> </span>
-                <span class="heat-cell" style="--strength:.12"> </span>
-                <span class="heat-cell" style="--strength:.58"> </span>
-                <span class="heat-cell" style="--strength:.31"> </span>
-                <span class="heat-cell" style="--strength:.22"> </span>
-                <span class="heat-cell" style="--strength:.38"> </span>
-
-                <span class="heat-label">Airtable</span>
-                <span class="heat-cell" style="--strength:.42"> </span>
-                <span class="heat-cell" style="--strength:.25"> </span>
-                <span class="heat-cell" style="--strength:.31"> </span>
-                <span class="heat-cell" style="--strength:.54"> </span>
-                <span class="heat-cell" style="--strength:.18"> </span>
-                <span class="heat-cell" style="--strength:.36"> </span>
-
-                <span class="heat-label">OpenAI</span>
-                <span class="heat-cell" style="--strength:.34"> </span>
-                <span class="heat-cell" style="--strength:.51"> </span>
-                <span class="heat-cell" style="--strength:.22"> </span>
-                <span class="heat-cell" style="--strength:.18"> </span>
-                <span class="heat-cell" style="--strength:.62"> </span>
-                <span class="heat-cell" style="--strength:.27"> </span>
-              </div>
-            </div>
+        <div class="chart-area placeholder-chart">
+          <div class="placeholder-inner bars">
+            <div class="bar-row"><label>Make + Airtable</label><div class="bar" style="--pct:81%"></div></div>
+            <div class="bar-row"><label>n8n + OpenAI</label><div class="bar" style="--pct:74%"></div></div>
+            <div class="bar-row"><label>Make + CRM</label><div class="bar" style="--pct:69%"></div></div>
+            <div class="bar-row"><label>Zapier + CRM</label><div class="bar" style="--pct:57%"></div></div>
+            <div class="bar-row"><label>n8n + APIs</label><div class="bar" style="--pct:76%"></div></div>
           </div>
-        </div>
-
-        <div class="mobile-insight">
-          <strong>Why this matters</strong>
-          <p>
-            Tool combinations reveal the ecosystems worth demonstrating
-            together rather than treating every platform as an isolated skill.
-          </p>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
 
-    <!-- ======================================================
-         05 — PAYMENT RANGE
-    ======================================================= -->
+  <!-- =======================================================
+       05 PAY
+  ======================================================== -->
 
-    <section class="section page-shell" id="pay">
-      <div class="section-header">
-        <div class="section-kicker">
+  <section id="pay">
+    <div class="page">
+      <div class="section-head">
+        <div class="section-id">
           <span class="section-number">05 /</span>
           <span class="section-type">Payment Range</span>
         </div>
@@ -1667,82 +1385,34 @@
         </div>
       </div>
 
-      <div class="viz-card">
-        <div class="viz-toolbar">
-          <div class="viz-label">
-            <span class="viz-status"></span>
-            MARKET RATE DISTRIBUTION
-          </div>
-          <span class="viz-hint">Range + mean</span>
+      <div class="chart-card">
+        <div class="chart-header">
+          <span class="chart-tag">Market rate distribution</span>
+          <small>Relative compensation by role</small>
         </div>
 
-        <div class="visualization" id="payment-chart">
-          <!-- Mount the existing Payment Range chart here. -->
-
-          <div class="chart-fallback" aria-hidden="true">
-            <div class="rate-chart">
-              <div class="rate-row">
-                <span class="rate-role">Automation architect</span>
-                <div class="range-track">
-                  <span class="range-bar" style="--start:25%;--range:62%"></span>
-                  <span class="range-dot" style="--avg:66%"></span>
-                </div>
-              </div>
-
-              <div class="rate-row">
-                <span class="rate-role">AI automation</span>
-                <div class="range-track">
-                  <span class="range-bar" style="--start:30%;--range:55%"></span>
-                  <span class="range-dot" style="--avg:62%"></span>
-                </div>
-              </div>
-
-              <div class="rate-row">
-                <span class="rate-role">Integration specialist</span>
-                <div class="range-track">
-                  <span class="range-bar" style="--start:19%;--range:52%"></span>
-                  <span class="range-dot" style="--avg:47%"></span>
-                </div>
-              </div>
-
-              <div class="rate-row">
-                <span class="rate-role">Workflow developer</span>
-                <div class="range-track">
-                  <span class="range-bar" style="--start:14%;--range:46%"></span>
-                  <span class="range-dot" style="--avg:39%"></span>
-                </div>
-              </div>
-
-              <div class="rate-row">
-                <span class="rate-role">Automation assistant</span>
-                <div class="range-track">
-                  <span class="range-bar" style="--start:8%;--range:34%"></span>
-                  <span class="range-dot" style="--avg:25%"></span>
-                </div>
-              </div>
-            </div>
+        <div class="chart-area placeholder-chart">
+          <div class="placeholder-inner bars">
+            <div class="bar-row"><label>Automation Architect</label><div class="bar" style="--pct:88%"></div></div>
+            <div class="bar-row"><label>AI Automation</label><div class="bar" style="--pct:79%"></div></div>
+            <div class="bar-row"><label>Integration Specialist</label><div class="bar" style="--pct:66%"></div></div>
+            <div class="bar-row"><label>Workflow Developer</label><div class="bar" style="--pct:54%"></div></div>
+            <div class="bar-row"><label>Automation Assistant</label><div class="bar" style="--pct:37%"></div></div>
           </div>
-        </div>
-
-        <div class="mobile-insight">
-          <strong>Positioning signal</strong>
-          <p>
-            Compare both the average and the width of each rate band.
-            Higher-value roles may justify positioning around system ownership,
-            architecture, and business outcomes.
-          </p>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
 
-    <!-- ======================================================
-         06 — DEMAND LANDSCAPE
-    ======================================================= -->
+  <!-- =======================================================
+       06 LANDSCAPE
+  ======================================================== -->
 
-    <section class="section page-shell" id="landscape">
-      <div class="section-header">
-        <div class="section-kicker">
+  <section id="landscape">
+    <div class="page">
+      <div class="section-head">
+        <div class="section-id">
           <span class="section-number">06 /</span>
           <span class="section-type">Demand Landscape</span>
         </div>
@@ -1750,230 +1420,80 @@
         <div class="section-copy">
           <h2>Industry → Target → Tool</h2>
           <p>
-            The full demand hierarchy at a glance. Larger rectangles = more
-            postings. Hover or tap for details.
+            The full demand hierarchy at a glance. Larger rectangles =
+            more postings. Hover for details.
           </p>
         </div>
       </div>
 
-      <div class="viz-card">
-        <div class="viz-toolbar">
-          <div class="viz-label">
-            <span class="viz-status"></span>
-            MARKET HIERARCHY
-          </div>
-          <span class="viz-hint">Area = relative demand</span>
+      <div class="chart-card">
+        <div class="chart-header">
+          <span class="chart-tag">Market hierarchy</span>
+          <small>Area = relative posting volume</small>
         </div>
 
-        <div class="visualization" id="landscape-chart">
-          <!-- Mount the existing Demand Landscape treemap here. -->
-
-          <div class="chart-fallback" aria-hidden="true">
-            <div class="treemap">
-              <div
-                class="tree-box"
-                style="
-                  --tree-bg:#345b49;
-                  --tree-ink:#fff;
-                "
-              >
-                <div>
-                  <div class="tree-title">Business Operations</div>
-                  <div class="tree-sub">WORKFLOWS · CRM · DATA</div>
-                </div>
-              </div>
-
-              <div
-                class="tree-box"
-                style="
-                  --tree-bg:#dce9e1;
-                "
-              >
-                <div>
-                  <div class="tree-title">Marketing</div>
-                  <div class="tree-sub">LEADS · CONTENT · OUTREACH</div>
-                </div>
-              </div>
-
-              <div
-                class="tree-box"
-                style="
-                  --tree-bg:#eadfbf;
-                "
-              >
-                <div>
-                  <div class="tree-title">Sales</div>
-                  <div class="tree-sub">CRM · QUALIFICATION</div>
-                </div>
-              </div>
-
-              <div
-                class="tree-box"
-                style="
-                  --tree-bg:#ebe9e2;
-                "
-              >
-                <div>
-                  <div class="tree-title">E-commerce / Agency / Other</div>
-                  <div class="tree-sub">INTEGRATIONS · REPORTING · DELIVERY</div>
-                </div>
-              </div>
-            </div>
+        <div class="chart-area placeholder-chart">
+          <div class="placeholder-inner bars">
+            <div class="bar-row"><label>Operations</label><div class="bar" style="--pct:91%"></div></div>
+            <div class="bar-row"><label>Marketing</label><div class="bar" style="--pct:72%"></div></div>
+            <div class="bar-row"><label>Sales</label><div class="bar" style="--pct:61%"></div></div>
+            <div class="bar-row"><label>E-commerce</label><div class="bar" style="--pct:49%"></div></div>
+            <div class="bar-row"><label>Agency</label><div class="bar" style="--pct:41%"></div></div>
           </div>
-        </div>
-
-        <div class="mobile-insight">
-          <strong>Use this as the overview</strong>
-          <p>
-            The largest regions reveal where demand concentrates before
-            drilling into the more specific relationships shown above.
-          </p>
         </div>
       </div>
-    </section>
-
-  </main>
-
-
-  <footer>
-    <div class="page-shell footer-inner">
-      <p class="footer-copy">
-        Upwork Automation Demand Intelligence<br>
-        79 postings analyzed · Data as of 2025
-      </p>
-
-      <a class="back-top" href="#top" aria-label="Back to the top">
-        Back to top
-        <span aria-hidden="true">↑</span>
-      </a>
     </div>
-  </footer>
+  </section>
+
+</main>
 
 
-  <script>
-    (() => {
-      const sections = [...document.querySelectorAll("main section[id]")];
-      const navLinks = [...document.querySelectorAll(".nav-link")];
-      const nav = document.getElementById("sectionNav");
+<footer>
+  <div class="page">
+    Upwork Automation Demand Intelligence · 79 postings analyzed · Data as of 2025
+  </div>
+</footer>
 
-      if (!sections.length || !navLinks.length) return;
 
-      const setActive = id => {
-        navLinks.forEach(link => {
-          const active = link.getAttribute("href") === `#${id}`;
-          link.classList.toggle("is-active", active);
+<script>
+  const links = [...document.querySelectorAll(".nav a")];
+  const sections = [...document.querySelectorAll("main section")];
 
-          if (active) {
-            link.setAttribute("aria-current", "location");
+  const observer = new IntersectionObserver(
+    entries => {
+      const visible = entries
+        .filter(entry => entry.isIntersecting)
+        .sort(
+          (a, b) =>
+            Math.abs(a.boundingClientRect.top) -
+            Math.abs(b.boundingClientRect.top)
+        );
 
-            const linkRect = link.getBoundingClientRect();
-            const navRect = nav.getBoundingClientRect();
+      if (!visible.length) return;
 
-            if (
-              linkRect.left < navRect.left ||
-              linkRect.right > navRect.right
-            ) {
-              link.scrollIntoView({
-                behavior: "smooth",
-                block: "nearest",
-                inline: "center"
-              });
-            }
-          } else {
-            link.removeAttribute("aria-current");
-          }
-        });
-      };
+      const id = visible[0].target.id;
 
-      const observer = new IntersectionObserver(
-        entries => {
-          const visible = entries
-            .filter(entry => entry.isIntersecting)
-            .sort(
-              (a, b) =>
-                Math.abs(a.boundingClientRect.top) -
-                Math.abs(b.boundingClientRect.top)
-            );
+      links.forEach(link => {
+        const active = link.getAttribute("href") === "#" + id;
+        link.classList.toggle("active", active);
 
-          if (visible[0]) {
-            setActive(visible[0].target.id);
-          }
-        },
-        {
-          rootMargin: "-20% 0px -62% 0px",
-          threshold: [0, 0.1, 0.25]
+        if (active) {
+          link.scrollIntoView({
+            behavior: "smooth",
+            inline: "center",
+            block: "nearest"
+          });
         }
-      );
-
-      sections.forEach(section => observer.observe(section));
-
-
-      /*
-        Automatically remove the CSS fallback if your existing
-        visualization library adds an SVG, canvas, iframe, Plotly chart,
-        or another substantive element to the chart mount.
-      */
-      document.querySelectorAll(".visualization").forEach(container => {
-        const fallback = container.querySelector(".chart-fallback");
-
-        if (!fallback) return;
-
-        const checkForRenderedChart = () => {
-          const children = [...container.children].filter(
-            child => child !== fallback
-          );
-
-          const rendered = children.some(child =>
-            child.matches(
-              "svg, canvas, iframe, .plot-container, .js-plotly-plot, [data-chart], .chart-container"
-            )
-          );
-
-          if (rendered) {
-            fallback.classList.add("is-hidden");
-          }
-        };
-
-        const chartObserver = new MutationObserver(checkForRenderedChart);
-
-        chartObserver.observe(container, {
-          childList: true,
-          subtree: false
-        });
-
-        checkForRenderedChart();
       });
+    },
+    {
+      rootMargin: "-20% 0px -65%",
+      threshold: [0, .1, .25]
+    }
+  );
 
-
-      /*
-        Helps responsive libraries recalculate chart dimensions
-        after phone rotation and viewport changes.
-      */
-      let resizeTimer;
-
-      window.addEventListener(
-        "resize",
-        () => {
-          clearTimeout(resizeTimer);
-
-          resizeTimer = setTimeout(() => {
-            window.dispatchEvent(new CustomEvent("caseStudyChartResize"));
-
-            if (window.Plotly) {
-              document
-                .querySelectorAll(".js-plotly-plot")
-                .forEach(chart => {
-                  try {
-                    window.Plotly.Plots.resize(chart);
-                  } catch (_) {}
-                });
-            }
-          }, 120);
-        },
-        { passive: true }
-      );
-    })();
-  </script>
+  sections.forEach(section => observer.observe(section));
+</script>
 
 </body>
 </html>
