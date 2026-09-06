@@ -19,6 +19,9 @@
     rel="stylesheet"
   >
 
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
+
   <style>
     :root {
       --bg: #0d1110;
@@ -38,6 +41,8 @@
       --green-dark: #497c60;
       --yellow: #d4b461;
       --orange: #d68b5d;
+      --red: #bf735f;
+      --blue: #7ba5c7;
 
       --radius: 18px;
       --max: 1380px;
@@ -50,11 +55,6 @@
     }
 
     html {
-      /*
-        Intentionally no scroll-behavior:smooth here.
-        Native scrolling remains fully under the user's control and avoids
-        the sticky/anchoring sensation on iOS.
-      */
       scroll-behavior: auto;
       -webkit-text-size-adjust: 100%;
       background: var(--bg);
@@ -75,7 +75,6 @@
       font-size: 16px;
       line-height: 1.55;
       -webkit-font-smoothing: antialiased;
-      overscroll-behavior-y: auto;
     }
 
     a {
@@ -100,20 +99,12 @@
       margin-inline: auto;
     }
 
-    .mono,
     .eyebrow,
     .section-number,
     .chart-tag,
-    .axis-value,
-    .radar-label,
     footer {
       font-family: "DM Mono", monospace;
     }
-
-
-    /* =========================================================
-       HERO
-    ========================================================= */
 
     .hero {
       padding:
@@ -198,11 +189,6 @@
       text-align: right;
     }
 
-
-    /* =========================================================
-       NAV
-    ========================================================= */
-
     .nav-wrap {
       position: sticky;
       z-index: 20;
@@ -210,13 +196,7 @@
       min-height: var(--nav-height);
       border-top: 1px solid var(--line);
       border-bottom: 1px solid var(--line);
-      background: rgba(13, 17, 16, 0.94);
-
-      /*
-        Removed backdrop-filter.
-        Safari can repaint a sticky blurred layer continuously while scrolling,
-        which often feels like vertical lag on iPhones.
-      */
+      background: rgba(13, 17, 16, 0.96);
     }
 
     .nav {
@@ -229,7 +209,6 @@
       overflow-y: hidden;
       scrollbar-width: none;
       -webkit-overflow-scrolling: touch;
-      overscroll-behavior-x: contain;
     }
 
     .nav::-webkit-scrollbar {
@@ -262,19 +241,9 @@
       font-size: 0.61rem;
     }
 
-
-    /* =========================================================
-       SECTIONS
-    ========================================================= */
-
     section {
       padding-block: var(--section-gap);
       border-top: 1px solid var(--line);
-
-      /*
-        Correctly offsets manual anchor navigation without continuously
-        influencing normal touch scrolling.
-      */
       scroll-margin-top: calc(var(--nav-height) + 18px);
     }
 
@@ -317,17 +286,11 @@
       font-size: clamp(0.96rem, 1.2vw, 1.08rem);
     }
 
-
-    /* =========================================================
-       GRAPHICS
-    ========================================================= */
-
     .chart-card {
       overflow: hidden;
       border: 1px solid var(--line-strong);
       border-radius: var(--radius);
       background: var(--surface);
-      contain: paint;
     }
 
     .chart-header {
@@ -364,304 +327,93 @@
       font-size: 0.68rem;
     }
 
-    .chart-area {
+    .chart-shell {
       position: relative;
-      min-height: clamp(480px, 56vw, 720px);
-      overflow: hidden;
+      min-width: 0;
       background:
-        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+        linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
       background-size: 46px 46px;
     }
 
-
-    /* =========================================================
-       OPPORTUNITY MATRIX
-    ========================================================= */
-
-    .matrix-chart {
-      display: grid;
-      min-height: 650px;
-      grid-template-columns: 56px minmax(0, 1fr);
-      grid-template-rows: minmax(0, 1fr) 54px;
-      padding: 35px 38px 18px 14px;
-    }
-
-    .matrix-y-title {
-      display: grid;
-      place-items: center;
-      color: var(--text-muted);
-      font-family: "DM Mono", monospace;
-      font-size: 0.63rem;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      writing-mode: vertical-rl;
-      transform: rotate(180deg);
-    }
-
-    .matrix-x-title {
-      grid-column: 2;
-      display: grid;
-      place-items: end center;
-      padding-top: 18px;
-      color: var(--text-muted);
-      font-family: "DM Mono", monospace;
-      font-size: 0.63rem;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-    }
-
-    .matrix-inner {
+    .d3-chart {
       position: relative;
-      min-height: 530px;
-      border-left: 1px solid var(--line-strong);
-      border-bottom: 1px solid var(--line-strong);
-      background:
-        linear-gradient(
-          to right,
-          transparent 24.8%,
-          var(--line) 25%,
-          transparent 25.2%,
-          transparent 49.8%,
-          var(--line) 50%,
-          transparent 50.2%,
-          transparent 74.8%,
-          var(--line) 75%,
-          transparent 75.2%
-        ),
-        linear-gradient(
-          to bottom,
-          transparent 24.8%,
-          var(--line) 25%,
-          transparent 25.2%,
-          transparent 49.8%,
-          var(--line) 50%,
-          transparent 50.2%,
-          transparent 74.8%,
-          var(--line) 75%,
-          transparent 75.2%
-        );
+      width: 100%;
+      min-width: 0;
     }
 
-    .matrix-axis-y {
-      position: absolute;
-      left: -46px;
-      inset-block: 0;
-      width: 40px;
-    }
-
-    .matrix-axis-x {
-      position: absolute;
-      right: 0;
-      bottom: -28px;
-      left: 0;
-    }
-
-    .axis-value {
-      position: absolute;
-      color: #88928b;
-      font-size: 0.57rem;
-      white-space: nowrap;
-    }
-
-    .axis-value.y1 { top: 0; right: 6px; }
-    .axis-value.y2 { top: 25%; right: 6px; transform: translateY(-50%); }
-    .axis-value.y3 { top: 50%; right: 6px; transform: translateY(-50%); }
-    .axis-value.y4 { top: 75%; right: 6px; transform: translateY(-50%); }
-    .axis-value.y5 { bottom: 0; right: 6px; }
-
-    .axis-value.x1 { left: 0; }
-    .axis-value.x2 { left: 25%; transform: translateX(-50%); }
-    .axis-value.x3 { left: 50%; transform: translateX(-50%); }
-    .axis-value.x4 { left: 75%; transform: translateX(-50%); }
-    .axis-value.x5 { right: 0; }
-
-    .quadrant-label {
-      position: absolute;
-      color: rgba(181, 192, 184, 0.42);
-      font-family: "DM Mono", monospace;
-      font-size: 0.57rem;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      pointer-events: none;
-    }
-
-    .q1 { top: 14px; left: 15px; }
-    .q2 { top: 14px; right: 15px; }
-    .q3 { bottom: 14px; left: 15px; }
-    .q4 { right: 15px; bottom: 14px; }
-
-    .bubble {
-      position: absolute;
-      left: var(--x);
-      top: var(--y);
-      width: var(--size);
-      aspect-ratio: 1;
-      transform: translate(-50%, -50%);
-      border: 1px solid rgba(255,255,255,.16);
-      border-radius: 50%;
-      background: var(--color);
-      box-shadow: 0 8px 26px rgba(0,0,0,.16);
-    }
-
-    .bubble-label {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      width: max-content;
-      max-width: 120px;
-      transform: translate(-50%, -50%);
-      color: #f5f7f4;
-      font-size: clamp(9px, .9vw, 12px);
-      font-weight: 500;
-      line-height: 1.18;
-      text-align: center;
-      text-shadow: 0 1px 3px rgba(0,0,0,.4);
-    }
-
-    .bubble-sub {
+    .d3-chart svg {
       display: block;
-      margin-top: 3px;
-      color: rgba(255,255,255,.68);
-      font-family: "DM Mono", monospace;
-      font-size: .7em;
-      font-weight: 400;
-    }
-
-
-    /* =========================================================
-       RADAR
-    ========================================================= */
-
-    .radar-chart {
-      min-height: 680px;
-      display: grid;
-      place-items: center;
-      padding: 30px;
-    }
-
-    .radar-svg {
-      width: min(100%, 720px);
+      width: 100%;
+      max-width: none;
       overflow: visible;
     }
 
-    .radar-grid {
-      fill: none;
-      stroke: rgba(255,255,255,.1);
-      stroke-width: 1;
+    .chart-scroll-mobile {
+      width: 100%;
     }
 
-    .radar-axis {
-      stroke: rgba(255,255,255,.08);
-      stroke-width: 1;
+    .chart-tooltip {
+      position: fixed;
+      z-index: 100;
+      max-width: 250px;
+      padding: 9px 11px;
+      border: 1px solid var(--line-strong);
+      border-radius: 9px;
+      background: rgba(20, 27, 24, 0.98);
+      color: var(--text);
+      box-shadow: 0 16px 42px rgba(0,0,0,.32);
+      font-size: 0.72rem;
+      line-height: 1.45;
+      pointer-events: none;
+      opacity: 0;
+      transform: translate(-50%, -112%);
+      transition: opacity 100ms ease;
     }
 
-    .radar-a {
-      fill: rgba(130,194,158,.13);
-      stroke: var(--green);
-      stroke-width: 2;
+    .chart-tooltip strong {
+      display: block;
+      margin-bottom: 2px;
+      font-weight: 500;
     }
 
-    .radar-b {
-      fill: rgba(212,180,97,.09);
-      stroke: var(--yellow);
-      stroke-width: 2;
-    }
-
-    .radar-point-a {
-      fill: var(--green-bright);
-    }
-
-    .radar-point-b {
-      fill: var(--yellow);
-    }
-
-    .radar-label {
-      fill: #c5cdc7;
-      font-size: 12px;
-      text-anchor: middle;
-    }
-
-    .radar-label tspan.sub {
-      fill: #737c76;
-      font-size: 9px;
-    }
-
-    .radar-legend {
-      position: absolute;
-      right: 20px;
-      bottom: 18px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 14px;
+    .chart-tooltip span {
       color: var(--text-soft);
+    }
+
+    .chart-mobile-note {
+      display: none;
+      padding: 10px 14px 0;
+      color: var(--text-muted);
       font-family: "DM Mono", monospace;
-      font-size: 0.58rem;
+      font-size: .58rem;
     }
 
-    .radar-legend span {
-      display: flex;
-      align-items: center;
-      gap: 6px;
+    .axis text {
+      fill: #89928c;
+      font-family: "DM Mono", monospace;
+      font-size: 10px;
     }
 
-    .legend-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
+    .axis path,
+    .axis line {
+      stroke: rgba(233, 240, 235, .12);
     }
 
-    .legend-dot.green { background: var(--green); }
-    .legend-dot.yellow { background: var(--yellow); }
-
-
-    /* =========================================================
-       OTHER CHARTS
-    ========================================================= */
-
-    .placeholder-chart {
-      min-height: 500px;
-      display: grid;
-      place-items: center;
-      padding: 40px;
+    .grid line {
+      stroke: rgba(233, 240, 235, .075);
     }
 
-    .placeholder-inner {
-      width: min(100%, 900px);
+    .grid path {
+      display: none;
     }
 
-    .bars {
-      display: grid;
-      gap: 20px;
+    footer {
+      padding: 30px 0 48px;
+      border-top: 1px solid var(--line);
+      color: var(--text-muted);
+      font-size: .62rem;
     }
-
-    .bar-row {
-      display: grid;
-      grid-template-columns: minmax(100px, 180px) 1fr;
-      gap: 18px;
-      align-items: center;
-    }
-
-    .bar-row label {
-      color: var(--text-soft);
-      font-size: .75rem;
-    }
-
-    .bar {
-      height: 7px;
-      border-radius: 999px;
-      background:
-        linear-gradient(
-          90deg,
-          var(--green) 0 var(--pct),
-          rgba(255,255,255,.07) var(--pct) 100%
-        );
-    }
-
-
-    /* =========================================================
-       TABLET / MOBILE
-    ========================================================= */
 
     @media (max-width: 800px) {
       .hero-layout,
@@ -721,10 +473,6 @@
           max(18px, env(safe-area-inset-left));
       }
 
-      .nav a {
-        background: rgba(255,255,255,.02);
-      }
-
       section {
         scroll-margin-top: calc(var(--nav-height) + 10px);
       }
@@ -746,99 +494,23 @@
         display: none;
       }
 
-      .chart-area {
-        min-height: 470px;
+      .chart-mobile-note {
+        display: block;
       }
 
-      .matrix-chart {
-        min-height: 540px;
-        grid-template-columns: 38px minmax(0, 1fr);
-        grid-template-rows: minmax(0, 1fr) 48px;
-        padding: 24px 16px 14px 7px;
+      .chart-scroll-mobile {
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
       }
 
-      .matrix-inner {
-        min-height: 445px;
+      .chart-scroll-mobile::-webkit-scrollbar {
+        display: none;
       }
 
-      .matrix-y-title {
-        font-size: .52rem;
-      }
-
-      .matrix-x-title {
-        padding-top: 15px;
-        font-size: .52rem;
-      }
-
-      .matrix-axis-y {
-        left: -35px;
-        width: 31px;
-      }
-
-      .axis-value {
-        font-size: .46rem;
-      }
-
-      .matrix-axis-x {
-        bottom: -23px;
-      }
-
-      .quadrant-label {
-        font-size: .43rem;
-      }
-
-      .q1 { top: 9px; left: 9px; }
-      .q2 { top: 9px; right: 9px; }
-      .q3 { bottom: 9px; left: 9px; }
-      .q4 { right: 9px; bottom: 9px; }
-
-      .bubble-label {
-        max-width: 72px;
-        font-size: 7.5px;
-      }
-
-      .radar-chart {
-        min-height: 510px;
-        padding: 38px 6px 62px;
-      }
-
-      .radar-svg {
-        width: 100%;
-      }
-
-      .radar-label {
-        font-size: 10px;
-      }
-
-      .radar-label tspan.sub {
-        font-size: 7px;
-      }
-
-      .radar-legend {
-        right: 12px;
-        bottom: 12px;
-        left: 12px;
-        justify-content: center;
-        gap: 12px;
-      }
-
-      .bar-row {
-        grid-template-columns: 82px 1fr;
-        gap: 10px;
-      }
-    }
-
-    @media (max-width: 390px) {
-      h1 {
-        font-size: 3rem;
-      }
-
-      .bubble-label {
-        font-size: 7px;
-      }
-
-      .radar-label {
-        font-size: 9px;
+      .axis text {
+        font-size: 8.5px;
       }
     }
 
@@ -854,754 +526,1717 @@
   </style>
 </head>
 
-<body id="top">
+<body>
 
-<header class="hero">
-  <div class="page">
-    <div class="hero-top">
-      <p class="eyebrow">Market research / automation</p>
-      <span class="hero-date">CASE STUDY · 2025</span>
-    </div>
-
-    <div class="hero-layout">
-      <div>
-        <h1>
-          Automation
-          <span>Demand Intelligence</span>
-        </h1>
-
-        <p class="hero-description">
-          Analysis of 79 Upwork job postings for Make.com, n8n, and workflow
-          automation — revealing where demand, pay, and opportunity intersect.
-        </p>
-      </div>
-
-      <div class="meta">
-        <div class="meta-row">
-          <span>Dataset</span>
-          <strong>79 postings</strong>
-        </div>
-        <div class="meta-row">
-          <span>Platforms</span>
-          <strong>Make · n8n</strong>
-        </div>
-        <div class="meta-row">
-          <span>Market</span>
-          <strong>Upwork</strong>
-        </div>
-        <div class="meta-row">
-          <span>Analysis</span>
-          <strong>Demand + pay</strong>
-        </div>
-      </div>
-    </div>
-  </div>
-</header>
-
-
-<nav class="nav-wrap" aria-label="Case study sections">
-  <div class="nav" id="caseNav">
-    <a class="active" href="#opportunity"><span class="n">01</span> Opportunity Matrix</a>
-    <a href="#flow"><span class="n">02</span> Demand Flow</a>
-    <a href="#proficiency"><span class="n">03</span> Proficiency Radar</a>
-    <a href="#tools"><span class="n">04</span> Tool Stacks</a>
-    <a href="#pay"><span class="n">05</span> Pay by Role</a>
-    <a href="#landscape"><span class="n">06</span> Demand Landscape</a>
-  </div>
-</nav>
-
-
-<main>
-
-  <section id="opportunity">
+  <header class="hero">
     <div class="page">
-      <div class="section-head">
-        <div class="section-id">
-          <span class="section-number">01 /</span>
-          <span class="section-type">Opportunity Matrix</span>
-        </div>
+      <div class="hero-top">
+        <p class="eyebrow">Market research / automation</p>
+        <span class="hero-date">CASE STUDY · 2025</span>
+      </div>
 
-        <div class="section-copy">
-          <h2>Industry × Automation Target</h2>
-          <p>
-            Bubble size = posting frequency. Color = average hourly rate.
-            Find the sweet spots: large, green bubbles are high-demand,
-            high-pay targets for your PoCs.
+      <div class="hero-layout">
+        <div>
+          <h1>
+            Automation
+            <span>Demand Intelligence</span>
+          </h1>
+
+          <p class="hero-description">
+            Analysis of 79 Upwork job postings for Make.com, n8n, and workflow
+            automation — revealing where demand, pay, and opportunity intersect.
           </p>
         </div>
-      </div>
 
-      <div class="chart-card">
-        <div class="chart-header">
-          <span class="chart-tag">Demand × value</span>
-          <small>Bubble size = posting frequency · color = hourly rate</small>
-        </div>
-
-        <div class="chart-area">
-          <div class="matrix-chart">
-
-            <div class="matrix-y-title">
-              Average hourly rate →
-            </div>
-
-            <div class="matrix-inner">
-
-              <div class="matrix-axis-y">
-                <span class="axis-value y1">$80+</span>
-                <span class="axis-value y2">$60</span>
-                <span class="axis-value y3">$40</span>
-                <span class="axis-value y4">$20</span>
-                <span class="axis-value y5">$0</span>
-              </div>
-
-              <div class="matrix-axis-x">
-                <span class="axis-value x1">Low</span>
-                <span class="axis-value x2">5</span>
-                <span class="axis-value x3">10</span>
-                <span class="axis-value x4">15</span>
-                <span class="axis-value x5">High</span>
-              </div>
-
-              <span class="quadrant-label q1">High pay · lower demand</span>
-              <span class="quadrant-label q2">Priority opportunities</span>
-              <span class="quadrant-label q3">Lower priority</span>
-              <span class="quadrant-label q4">High demand · lower pay</span>
-
-              <div
-                class="bubble"
-                style="
-                  --x:25%;
-                  --y:68%;
-                  --size:68px;
-                  --color:rgba(214,139,93,.62);
-                "
-              >
-                <span class="bubble-label">
-                  CRM
-                  <span class="bubble-sub">Sales</span>
-                </span>
-              </div>
-
-              <div
-                class="bubble"
-                style="
-                  --x:40%;
-                  --y:37%;
-                  --size:104px;
-                  --color:rgba(130,194,158,.59);
-                "
-              >
-                <span class="bubble-label">
-                  Lead Generation
-                  <span class="bubble-sub">Marketing</span>
-                </span>
-              </div>
-
-              <div
-                class="bubble"
-                style="
-                  --x:66%;
-                  --y:30%;
-                  --size:142px;
-                  --color:rgba(130,194,158,.78);
-                "
-              >
-                <span class="bubble-label">
-                  Business Operations
-                  <span class="bubble-sub">Workflow automation</span>
-                </span>
-              </div>
-
-              <div
-                class="bubble"
-                style="
-                  --x:78%;
-                  --y:61%;
-                  --size:98px;
-                  --color:rgba(212,180,97,.58);
-                "
-              >
-                <span class="bubble-label">
-                  Content
-                  <span class="bubble-sub">Marketing</span>
-                </span>
-              </div>
-
-              <div
-                class="bubble"
-                style="
-                  --x:55%;
-                  --y:71%;
-                  --size:62px;
-                  --color:rgba(212,180,97,.52);
-                "
-              >
-                <span class="bubble-label">
-                  Data Entry
-                  <span class="bubble-sub">Operations</span>
-                </span>
-              </div>
-
-              <div
-                class="bubble"
-                style="
-                  --x:31%;
-                  --y:48%;
-                  --size:85px;
-                  --color:rgba(130,194,158,.53);
-                "
-              >
-                <span class="bubble-label">
-                  Outreach
-                  <span class="bubble-sub">Sales</span>
-                </span>
-              </div>
-
-              <div
-                class="bubble"
-                style="
-                  --x:51%;
-                  --y:23%;
-                  --size:72px;
-                  --color:rgba(161,216,184,.65);
-                "
-              >
-                <span class="bubble-label">
-                  API Integration
-                  <span class="bubble-sub">Software</span>
-                </span>
-              </div>
-
-            </div>
-
-            <div class="matrix-x-title">
-              Posting frequency →
-            </div>
+        <div class="meta">
+          <div class="meta-row">
+            <span>Dataset</span>
+            <strong>79 postings</strong>
+          </div>
+          <div class="meta-row">
+            <span>Platforms</span>
+            <strong>Make · n8n</strong>
+          </div>
+          <div class="meta-row">
+            <span>Market</span>
+            <strong>Upwork</strong>
+          </div>
+          <div class="meta-row">
+            <span>Analysis</span>
+            <strong>Demand + pay</strong>
           </div>
         </div>
       </div>
     </div>
-  </section>
+  </header>
 
+  <nav class="nav-wrap" aria-label="Case study sections">
+    <div class="nav" id="caseNav">
+      <a class="active" href="#opportunity"><span class="n">01</span> Opportunity Matrix</a>
+      <a href="#flow"><span class="n">02</span> Demand Flow</a>
+      <a href="#proficiency"><span class="n">03</span> Proficiency Radar</a>
+      <a href="#tools"><span class="n">04</span> Tool Stacks</a>
+      <a href="#pay"><span class="n">05</span> Pay by Role</a>
+      <a href="#landscape"><span class="n">06</span> Demand Landscape</a>
+    </div>
+  </nav>
 
-  <section id="flow">
-    <div class="page">
-      <div class="section-head">
-        <div class="section-id">
-          <span class="section-number">02 /</span>
-          <span class="section-type">Demand Flow</span>
+  <main>
+
+    <section id="opportunity">
+      <div class="page">
+        <div class="section-head">
+          <div class="section-id">
+            <span class="section-number">01 /</span>
+            <span class="section-type">Opportunity Matrix</span>
+          </div>
+
+          <div class="section-copy">
+            <h2>Industry × Automation Target</h2>
+            <p>
+              Bubble size = posting frequency. Color = average hourly rate.
+              Find the sweet spots: large, green bubbles are high-demand,
+              high-pay targets for your PoCs.
+            </p>
+          </div>
         </div>
 
-        <div class="section-copy">
-          <h2>Platform → Industry → Automation Target</h2>
-          <p>
-            How demand flows from each automation platform through industries
-            into specific tasks. Thicker bands = stronger connection.
-          </p>
-        </div>
-      </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <span class="chart-tag">Demand × value</span>
+            <small>Bubble size = posting frequency · color = hourly rate</small>
+          </div>
 
-      <div class="chart-card">
-        <div class="chart-header">
-          <span class="chart-tag">Relationship flow</span>
-          <small>Follow demand from platform to outcome</small>
-        </div>
-
-        <div class="chart-area placeholder-chart">
-          <div class="placeholder-inner bars">
-            <div class="bar-row"><label>Make.com</label><div class="bar" style="--pct:84%"></div></div>
-            <div class="bar-row"><label>n8n</label><div class="bar" style="--pct:67%"></div></div>
-            <div class="bar-row"><label>Operations</label><div class="bar" style="--pct:73%"></div></div>
-            <div class="bar-row"><label>Marketing</label><div class="bar" style="--pct:58%"></div></div>
-            <div class="bar-row"><label>Sales</label><div class="bar" style="--pct:49%"></div></div>
+          <div class="chart-shell">
+            <div class="d3-chart" id="opportunityChart"></div>
           </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-
-  <section id="proficiency">
-    <div class="page">
-      <div class="section-head">
-        <div class="section-id">
-          <span class="section-number">03 /</span>
-          <span class="section-type">Proficiency Radar</span>
-        </div>
-
-        <div class="section-copy">
-          <h2>What Clients Ask You to Prove</h2>
-          <p>
-            Required proficiency areas by client understanding level.
-            Shape your portfolio to match.
-          </p>
-        </div>
-      </div>
-
-      <div class="chart-card">
-        <div class="chart-header">
-          <span class="chart-tag">Expected capability</span>
-          <small>Relative frequency of requested skills</small>
-        </div>
-
-        <div class="chart-area radar-chart">
-
-          <svg
-            class="radar-svg"
-            viewBox="-70 -60 740 720"
-            aria-label="Radar chart showing requested proficiency areas"
-          >
-            <g transform="translate(300 300)">
-
-              <polygon
-                class="radar-grid"
-                points="0,-235 203,-117.5 203,117.5 0,235 -203,117.5 -203,-117.5"
-              />
-              <polygon
-                class="radar-grid"
-                points="0,-188 163,-94 163,94 0,188 -163,94 -163,-94"
-              />
-              <polygon
-                class="radar-grid"
-                points="0,-141 122,-70.5 122,70.5 0,141 -122,70.5 -122,-70.5"
-              />
-              <polygon
-                class="radar-grid"
-                points="0,-94 81,-47 81,47 0,94 -81,47 -81,-47"
-              />
-              <polygon
-                class="radar-grid"
-                points="0,-47 41,-23.5 41,23.5 0,47 -41,23.5 -41,-23.5"
-              />
-
-              <line class="radar-axis" x1="0" y1="0" x2="0" y2="-235"/>
-              <line class="radar-axis" x1="0" y1="0" x2="203" y2="-117.5"/>
-              <line class="radar-axis" x1="0" y1="0" x2="203" y2="117.5"/>
-              <line class="radar-axis" x1="0" y1="0" x2="0" y2="235"/>
-              <line class="radar-axis" x1="0" y1="0" x2="-203" y2="117.5"/>
-              <line class="radar-axis" x1="0" y1="0" x2="-203" y2="-117.5"/>
-
-              <polygon
-                class="radar-a"
-                points="0,-205 170,-98 154,89 0,181 -126,73 -168,-97"
-              />
-
-              <polygon
-                class="radar-b"
-                points="0,-141 117,-67 184,106 0,210 -151,87 -108,-62"
-              />
-
-              <circle class="radar-point-a" cx="0" cy="-205" r="4"/>
-              <circle class="radar-point-a" cx="170" cy="-98" r="4"/>
-              <circle class="radar-point-a" cx="154" cy="89" r="4"/>
-              <circle class="radar-point-a" cx="0" cy="181" r="4"/>
-              <circle class="radar-point-a" cx="-126" cy="73" r="4"/>
-              <circle class="radar-point-a" cx="-168" cy="-97" r="4"/>
-
-              <circle class="radar-point-b" cx="0" cy="-141" r="4"/>
-              <circle class="radar-point-b" cx="117" cy="-67" r="4"/>
-              <circle class="radar-point-b" cx="184" cy="106" r="4"/>
-              <circle class="radar-point-b" cx="0" cy="210" r="4"/>
-              <circle class="radar-point-b" cx="-151" cy="87" r="4"/>
-              <circle class="radar-point-b" cx="-108" cy="-62" r="4"/>
-
-              <text class="radar-label" x="0" y="-270">
-                Automation Platform
-                <tspan class="sub" x="0" dy="14">Make · n8n · Zapier</tspan>
-              </text>
-
-              <text class="radar-label" x="250" y="-138">
-                API Integration
-                <tspan class="sub" x="250" dy="14">webhooks · REST</tspan>
-              </text>
-
-              <text class="radar-label" x="255" y="138">
-                AI / LLM
-                <tspan class="sub" x="255" dy="14">OpenAI · agents</tspan>
-              </text>
-
-              <text class="radar-label" x="0" y="278">
-                Business Logic
-                <tspan class="sub" x="0" dy="14">process design</tspan>
-              </text>
-
-              <text class="radar-label" x="-255" y="138">
-                Data Handling
-                <tspan class="sub" x="-255" dy="14">CRM · tables</tspan>
-              </text>
-
-              <text class="radar-label" x="-250" y="-138">
-                Problem Solving
-                <tspan class="sub" x="-250" dy="14">debug · optimize</tspan>
-              </text>
-
-            </g>
-          </svg>
-
-          <div class="radar-legend">
-            <span>
-              <i class="legend-dot green"></i>
-              Higher-understanding clients
-            </span>
-
-            <span>
-              <i class="legend-dot yellow"></i>
-              Lower-understanding clients
-            </span>
+    <section id="flow">
+      <div class="page">
+        <div class="section-head">
+          <div class="section-id">
+            <span class="section-number">02 /</span>
+            <span class="section-type">Demand Flow</span>
           </div>
 
-        </div>
-      </div>
-    </div>
-  </section>
-
-
-  <section id="tools">
-    <div class="page">
-      <div class="section-head">
-        <div class="section-id">
-          <span class="section-number">04 /</span>
-          <span class="section-type">Tool Co-occurrence</span>
+          <div class="section-copy">
+            <h2>Platform → Industry → Automation Target</h2>
+            <p>
+              How demand flows from each automation platform through industries
+              into specific tasks. Thicker bands = stronger connection.
+            </p>
+          </div>
         </div>
 
-        <div class="section-copy">
-          <h2>Which Tools Get Mentioned Together</h2>
-          <p>
-            Darker cells = more frequent pairing. Diagonal = individual
-            mention count. These clusters reveal the stacks the market expects.
-          </p>
-        </div>
-      </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <span class="chart-tag">Relationship flow</span>
+            <small>Thicker bands = stronger connection</small>
+          </div>
 
-      <div class="chart-card">
-        <div class="chart-header">
-          <span class="chart-tag">Stack affinity</span>
-          <small>Tool combinations appearing in the same posting</small>
-        </div>
+          <div class="chart-mobile-note">
+            Swipe horizontally to inspect the complete demand flow.
+          </div>
 
-        <div class="chart-area placeholder-chart">
-          <div class="placeholder-inner bars">
-            <div class="bar-row"><label>Make + Airtable</label><div class="bar" style="--pct:81%"></div></div>
-            <div class="bar-row"><label>n8n + OpenAI</label><div class="bar" style="--pct:74%"></div></div>
-            <div class="bar-row"><label>Make + CRM</label><div class="bar" style="--pct:69%"></div></div>
-            <div class="bar-row"><label>Zapier + CRM</label><div class="bar" style="--pct:57%"></div></div>
-            <div class="bar-row"><label>n8n + APIs</label><div class="bar" style="--pct:76%"></div></div>
+          <div class="chart-shell chart-scroll-mobile">
+            <div class="d3-chart" id="flowChart"></div>
           </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
+    <section id="proficiency">
+      <div class="page">
+        <div class="section-head">
+          <div class="section-id">
+            <span class="section-number">03 /</span>
+            <span class="section-type">Proficiency Radar</span>
+          </div>
 
-  <section id="pay">
-    <div class="page">
-      <div class="section-head">
-        <div class="section-id">
-          <span class="section-number">05 /</span>
-          <span class="section-type">Payment Range</span>
+          <div class="section-copy">
+            <h2>What Clients Ask You to Prove</h2>
+            <p>
+              Required proficiency areas by client understanding level.
+              Shape your portfolio to match.
+            </p>
+          </div>
         </div>
 
-        <div class="section-copy">
-          <h2>Hourly Rate by Inferred Role</h2>
-          <p>
-            Range bars show low-to-high band, dot marks average.
-            Position yourself in premium roles.
-          </p>
-        </div>
-      </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <span class="chart-tag">Expected capability</span>
+            <small>Relative frequency of requested skills</small>
+          </div>
 
-      <div class="chart-card">
-        <div class="chart-header">
-          <span class="chart-tag">Market rate distribution</span>
-          <small>Relative compensation by role</small>
-        </div>
-
-        <div class="chart-area placeholder-chart">
-          <div class="placeholder-inner bars">
-            <div class="bar-row"><label>Automation Architect</label><div class="bar" style="--pct:88%"></div></div>
-            <div class="bar-row"><label>AI Automation</label><div class="bar" style="--pct:79%"></div></div>
-            <div class="bar-row"><label>Integration Specialist</label><div class="bar" style="--pct:66%"></div></div>
-            <div class="bar-row"><label>Workflow Developer</label><div class="bar" style="--pct:54%"></div></div>
-            <div class="bar-row"><label>Automation Assistant</label><div class="bar" style="--pct:37%"></div></div>
+          <div class="chart-shell">
+            <div class="d3-chart" id="proficiencyChart"></div>
           </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
+    <section id="tools">
+      <div class="page">
+        <div class="section-head">
+          <div class="section-id">
+            <span class="section-number">04 /</span>
+            <span class="section-type">Tool Co-occurrence</span>
+          </div>
 
-  <section id="landscape">
-    <div class="page">
-      <div class="section-head">
-        <div class="section-id">
-          <span class="section-number">06 /</span>
-          <span class="section-type">Demand Landscape</span>
+          <div class="section-copy">
+            <h2>Which Tools Get Mentioned Together</h2>
+            <p>
+              Darker cells = more frequent pairing. Diagonal = individual
+              mention count. These clusters reveal the “stacks” the market expects.
+            </p>
+          </div>
         </div>
 
-        <div class="section-copy">
-          <h2>Industry → Target → Tool</h2>
-          <p>
-            The full demand hierarchy at a glance. Larger rectangles =
-            more postings. Hover for details.
-          </p>
-        </div>
-      </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <span class="chart-tag">Stack affinity</span>
+            <small>Darker cells = stronger co-occurrence</small>
+          </div>
 
-      <div class="chart-card">
-        <div class="chart-header">
-          <span class="chart-tag">Market hierarchy</span>
-          <small>Area = relative posting volume</small>
-        </div>
+          <div class="chart-mobile-note">
+            Swipe horizontally to inspect the full matrix.
+          </div>
 
-        <div class="chart-area placeholder-chart">
-          <div class="placeholder-inner bars">
-            <div class="bar-row"><label>Operations</label><div class="bar" style="--pct:91%"></div></div>
-            <div class="bar-row"><label>Marketing</label><div class="bar" style="--pct:72%"></div></div>
-            <div class="bar-row"><label>Sales</label><div class="bar" style="--pct:61%"></div></div>
-            <div class="bar-row"><label>E-commerce</label><div class="bar" style="--pct:49%"></div></div>
-            <div class="bar-row"><label>Agency</label><div class="bar" style="--pct:41%"></div></div>
+          <div class="chart-shell chart-scroll-mobile">
+            <div class="d3-chart" id="toolsChart"></div>
           </div>
         </div>
       </div>
+    </section>
+
+    <section id="pay">
+      <div class="page">
+        <div class="section-head">
+          <div class="section-id">
+            <span class="section-number">05 /</span>
+            <span class="section-type">Payment Range</span>
+          </div>
+
+          <div class="section-copy">
+            <h2>Hourly Rate by Inferred Role</h2>
+            <p>
+              Range bars show low-to-high band, dot marks average.
+              Position yourself in premium roles.
+            </p>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <span class="chart-tag">Market rate distribution</span>
+            <small>Range = low-to-high · dot = average</small>
+          </div>
+
+          <div class="chart-shell">
+            <div class="d3-chart" id="payChart"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="landscape">
+      <div class="page">
+        <div class="section-head">
+          <div class="section-id">
+            <span class="section-number">06 /</span>
+            <span class="section-type">Demand Landscape</span>
+          </div>
+
+          <div class="section-copy">
+            <h2>Industry → Target → Tool</h2>
+            <p>
+              The full demand hierarchy at a glance. Larger rectangles =
+              more postings. Hover or tap for details.
+            </p>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <span class="chart-tag">Market hierarchy</span>
+            <small>Area = relative posting volume</small>
+          </div>
+
+          <div class="chart-shell">
+            <div class="d3-chart" id="landscapeChart"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="page">
+      Upwork Automation Demand Intelligence · 79 postings analyzed · Data as of 2025
     </div>
-  </section>
+  </footer>
 
-</main>
+  <div class="chart-tooltip" id="chartTooltip"></div>
 
-
-<footer>
-  <div class="page">
-    Upwork Automation Demand Intelligence · 79 postings analyzed · Data as of 2025
-  </div>
-</footer>
-
-
-<script>
-  (() => {
-    const nav = document.getElementById("caseNav");
-    const links = [...nav.querySelectorAll("a[href^='#']")];
-    const sections = links
-      .map(link => document.querySelector(link.getAttribute("href")))
-      .filter(Boolean);
-
-    let activeId = "";
-    let ticking = false;
-
-
-    /* =========================================================
-       ACTIVE NAV STATE
-
-       Important:
-       - does NOT use scrollIntoView()
-       - does NOT modify vertical scroll position
-       - does NOT use IntersectionObserver
-       - updates at most once per animation frame
-    ========================================================= */
-
-    function setActive(id) {
-      if (id === activeId) return;
-
-      activeId = id;
-
-      links.forEach(link => {
-        const isActive = link.getAttribute("href") === "#" + id;
-
-        link.classList.toggle("active", isActive);
-
-        if (isActive) {
-          link.setAttribute("aria-current", "location");
-          centerNavItemHorizontally(link);
-        } else {
-          link.removeAttribute("aria-current");
-        }
-      });
-    }
-
-
+  <script>
     /*
-      Moves ONLY the nav's horizontal scrollbar.
+      -------------------------------------------------------------------------
+      DATA
+      -------------------------------------------------------------------------
+      Replace these arrays with the exact arrays from the original page if your
+      production file contains a more detailed dataset.
 
-      Using element.scrollIntoView() here was the source of the strange
-      page anchoring because browsers are allowed to reposition both axes.
+      The rendering layer below is intentionally independent from the data:
+      desktop retains the full D3 visualization types and mobile adapts the
+      same charts rather than replacing them with simplified graphics.
     */
-    function centerNavItemHorizontally(link) {
-      const navRect = nav.getBoundingClientRect();
-      const linkRect = link.getBoundingClientRect();
 
-      const hiddenLeft = linkRect.left < navRect.left + 8;
-      const hiddenRight = linkRect.right > navRect.right - 8;
+    const opportunityData = [
+      {
+        industry: "Business Services",
+        target: "Workflow Automation",
+        frequency: 17,
+        rate: 62
+      },
+      {
+        industry: "Marketing",
+        target: "Lead Generation",
+        frequency: 13,
+        rate: 56
+      },
+      {
+        industry: "Sales",
+        target: "CRM Automation",
+        frequency: 11,
+        rate: 48
+      },
+      {
+        industry: "Software",
+        target: "API Integration",
+        frequency: 8,
+        rate: 68
+      },
+      {
+        industry: "Marketing",
+        target: "Content Automation",
+        frequency: 10,
+        rate: 43
+      },
+      {
+        industry: "Operations",
+        target: "Data Processing",
+        frequency: 7,
+        rate: 39
+      },
+      {
+        industry: "Sales",
+        target: "Outreach",
+        frequency: 8,
+        rate: 52
+      },
+      {
+        industry: "E-commerce",
+        target: "Order / CRM Sync",
+        frequency: 5,
+        rate: 46
+      }
+    ];
 
-      if (!hiddenLeft && !hiddenRight) return;
+    const flowData = {
+      nodes: [
+        { name: "Make.com", group: "platform" },
+        { name: "n8n", group: "platform" },
 
-      const linkCenter =
-        link.offsetLeft +
-        link.offsetWidth / 2;
+        { name: "Business Services", group: "industry" },
+        { name: "Marketing", group: "industry" },
+        { name: "Sales", group: "industry" },
+        { name: "Software", group: "industry" },
+        { name: "E-commerce", group: "industry" },
 
-      const desiredScroll =
-        linkCenter -
-        nav.clientWidth / 2;
+        { name: "Workflow Automation", group: "target" },
+        { name: "Lead Generation", group: "target" },
+        { name: "CRM Automation", group: "target" },
+        { name: "API Integration", group: "target" },
+        { name: "Content Automation", group: "target" },
+        { name: "Data Processing", group: "target" }
+      ],
+      links: [
+        { source: 0, target: 2, value: 13 },
+        { source: 0, target: 3, value: 12 },
+        { source: 0, target: 4, value: 10 },
+        { source: 0, target: 6, value: 6 },
 
-      nav.scrollTo({
-        left: Math.max(0, desiredScroll),
-        behavior: "smooth"
+        { source: 1, target: 2, value: 9 },
+        { source: 1, target: 3, value: 7 },
+        { source: 1, target: 4, value: 6 },
+        { source: 1, target: 5, value: 9 },
+        { source: 1, target: 6, value: 7 },
+
+        { source: 2, target: 7, value: 14 },
+        { source: 2, target: 12, value: 8 },
+
+        { source: 3, target: 8, value: 11 },
+        { source: 3, target: 11, value: 8 },
+
+        { source: 4, target: 9, value: 12 },
+        { source: 4, target: 8, value: 4 },
+
+        { source: 5, target: 10, value: 9 },
+
+        { source: 6, target: 9, value: 4 },
+        { source: 6, target: 12, value: 5 },
+        { source: 6, target: 7, value: 4 }
+      ]
+    };
+
+    const proficiencyData = [
+      {
+        skill: "Platform Expertise",
+        knowledgeable: 88,
+        exploratory: 62
+      },
+      {
+        skill: "API Integration",
+        knowledgeable: 82,
+        exploratory: 59
+      },
+      {
+        skill: "AI / LLM",
+        knowledgeable: 74,
+        exploratory: 86
+      },
+      {
+        skill: "Business Logic",
+        knowledgeable: 78,
+        exploratory: 92
+      },
+      {
+        skill: "Data Handling",
+        knowledgeable: 68,
+        exploratory: 80
+      },
+      {
+        skill: "Problem Solving",
+        knowledgeable: 84,
+        exploratory: 58
+      }
+    ];
+
+    const tools = [
+      "Make",
+      "n8n",
+      "OpenAI",
+      "Airtable",
+      "HubSpot",
+      "Google Sheets",
+      "Slack",
+      "Webhooks"
+    ];
+
+    const toolMatrix = [
+      [31, 5, 13, 15, 11, 18, 7, 12],
+      [5, 26, 15, 8, 7, 11, 6, 17],
+      [13, 15, 28, 7, 5, 10, 6, 14],
+      [15, 8, 7, 19, 8, 13, 4, 7],
+      [11, 7, 5, 8, 17, 8, 4, 6],
+      [18, 11, 10, 13, 8, 24, 9, 11],
+      [7, 6, 6, 4, 4, 9, 13, 5],
+      [12, 17, 14, 7, 6, 11, 5, 22]
+    ];
+
+    const payData = [
+      {
+        role: "Automation Architect",
+        low: 45,
+        average: 72,
+        high: 110
+      },
+      {
+        role: "AI Automation Specialist",
+        low: 40,
+        average: 67,
+        high: 100
+      },
+      {
+        role: "Integration Specialist",
+        low: 35,
+        average: 56,
+        high: 85
+      },
+      {
+        role: "Workflow Developer",
+        low: 25,
+        average: 44,
+        high: 70
+      },
+      {
+        role: "Automation Assistant",
+        low: 15,
+        average: 28,
+        high: 45
+      }
+    ];
+
+    const landscapeData = {
+      name: "Demand",
+      children: [
+        {
+          name: "Business Services",
+          children: [
+            {
+              name: "Workflow Automation",
+              children: [
+                { name: "Make", value: 8 },
+                { name: "n8n", value: 6 },
+                { name: "Webhooks", value: 3 }
+              ]
+            },
+            {
+              name: "Data Processing",
+              children: [
+                { name: "Google Sheets", value: 4 },
+                { name: "Airtable", value: 3 }
+              ]
+            }
+          ]
+        },
+        {
+          name: "Marketing",
+          children: [
+            {
+              name: "Lead Generation",
+              children: [
+                { name: "Make", value: 6 },
+                { name: "OpenAI", value: 4 },
+                { name: "Airtable", value: 3 }
+              ]
+            },
+            {
+              name: "Content Automation",
+              children: [
+                { name: "OpenAI", value: 5 },
+                { name: "Make", value: 3 },
+                { name: "Google Sheets", value: 2 }
+              ]
+            }
+          ]
+        },
+        {
+          name: "Sales",
+          children: [
+            {
+              name: "CRM Automation",
+              children: [
+                { name: "HubSpot", value: 5 },
+                { name: "Make", value: 4 },
+                { name: "n8n", value: 2 }
+              ]
+            },
+            {
+              name: "Outreach",
+              children: [
+                { name: "Make", value: 3 },
+                { name: "OpenAI", value: 2 },
+                { name: "Google Sheets", value: 2 }
+              ]
+            }
+          ]
+        },
+        {
+          name: "Software",
+          children: [
+            {
+              name: "API Integration",
+              children: [
+                { name: "n8n", value: 5 },
+                { name: "Webhooks", value: 4 },
+                { name: "OpenAI", value: 2 }
+              ]
+            }
+          ]
+        }
+      ]
+    };
+
+    const COLORS = {
+      bg: "#0d1110",
+      surface: "#121715",
+      text: "#f0f3ef",
+      textSoft: "#a8b0aa",
+      muted: "#737c76",
+      line: "rgba(233,240,235,.12)",
+      grid: "rgba(233,240,235,.08)",
+      green: "#82c29e",
+      greenBright: "#a1d8b8",
+      yellow: "#d4b461",
+      orange: "#d68b5d",
+      blue: "#7ba5c7"
+    };
+
+    const tooltip = d3.select("#chartTooltip");
+
+    function showTooltip(event, html) {
+      tooltip
+        .html(html)
+        .style("opacity", 1);
+
+      moveTooltip(event);
+    }
+
+    function moveTooltip(event) {
+      const x = event.clientX;
+      const y = event.clientY;
+
+      tooltip
+        .style("left", `${x}px`)
+        .style("top", `${y}px`);
+    }
+
+    function hideTooltip() {
+      tooltip.style("opacity", 0);
+    }
+
+    function isMobile(width) {
+      return width < 640;
+    }
+
+    function wrapSvgText(selection, maxWidth, lineHeight = 1.15) {
+      selection.each(function() {
+        const text = d3.select(this);
+        const words = text.text().split(/\s+/).reverse();
+
+        let word;
+        let line = [];
+        let lineNumber = 0;
+
+        const x = text.attr("x");
+        const y = text.attr("y");
+        const dy = parseFloat(text.attr("dy") || 0);
+
+        let tspan = text
+          .text(null)
+          .append("tspan")
+          .attr("x", x)
+          .attr("y", y)
+          .attr("dy", `${dy}em`);
+
+        while (word = words.pop()) {
+          line.push(word);
+          tspan.text(line.join(" "));
+
+          if (tspan.node().getComputedTextLength() > maxWidth && line.length > 1) {
+            line.pop();
+            tspan.text(line.join(" "));
+            line = [word];
+
+            tspan = text
+              .append("tspan")
+              .attr("x", x)
+              .attr("y", y)
+              .attr("dy", `${++lineNumber * lineHeight + dy}em`)
+              .text(word);
+          }
+        }
       });
     }
 
-
-    function updateActiveSection() {
-      /*
-        Position below sticky navigation where a section becomes
-        conceptually "current".
-      */
-      const trigger =
-        Math.max(
-          80,
-          parseFloat(
-            getComputedStyle(document.documentElement)
-              .getPropertyValue("--nav-height")
-          ) || 58
-        ) + 48;
-
-      let current = sections[0];
-
-      for (const section of sections) {
-        const top = section.getBoundingClientRect().top;
-
-        if (top <= trigger) {
-          current = section;
-        } else {
-          break;
-        }
-      }
-
-      /*
-        Near page bottom, guarantee final section becomes active.
-      */
-      const nearBottom =
-        window.innerHeight + window.scrollY >=
-        document.documentElement.scrollHeight - 24;
-
-      if (nearBottom) {
-        current = sections[sections.length - 1];
-      }
-
-      if (current) {
-        setActive(current.id);
-      }
-
-      ticking = false;
+    function clearChart(id) {
+      d3.select(id).selectAll("*").remove();
     }
 
+    function renderOpportunityChart() {
+      const el = document.querySelector("#opportunityChart");
+      clearChart("#opportunityChart");
 
-    window.addEventListener(
-      "scroll",
-      () => {
-        if (!ticking) {
-          window.requestAnimationFrame(updateActiveSection);
-          ticking = true;
-        }
-      },
-      { passive: true }
-    );
+      const width = el.clientWidth;
+      const mobile = isMobile(width);
 
+      const height = mobile
+        ? Math.max(540, width * 1.38)
+        : Math.min(690, Math.max(560, width * .54));
 
-    window.addEventListener(
-      "resize",
-      () => {
-        if (!ticking) {
-          window.requestAnimationFrame(updateActiveSection);
-          ticking = true;
-        }
-      },
-      { passive: true }
-    );
+      const margin = mobile
+        ? { top: 42, right: 20, bottom: 78, left: 62 }
+        : { top: 52, right: 45, bottom: 78, left: 78 };
 
+      const innerWidth = width - margin.left - margin.right;
+      const innerHeight = height - margin.top - margin.bottom;
 
-    /* =========================================================
-       NAV CLICKS
+      const svg = d3.select(el)
+        .append("svg")
+        .attr("viewBox", `0 0 ${width} ${height}`)
+        .attr("width", width)
+        .attr("height", height)
+        .attr("aria-label", "Industry by automation target opportunity matrix");
 
-       Explicit scrolling avoids browser hash-anchor surprises and
-       accounts for the sticky nav height.
-    ========================================================= */
+      const g = svg.append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    links.forEach(link => {
-      link.addEventListener("click", event => {
-        const selector = link.getAttribute("href");
-        const target = document.querySelector(selector);
+      const maxFrequency = d3.max(opportunityData, d => d.frequency);
 
-        if (!target) return;
+      const x = d3.scaleLinear()
+        .domain([0, maxFrequency + 2])
+        .range([0, innerWidth]);
 
-        event.preventDefault();
+      const y = d3.scaleLinear()
+        .domain([0, Math.max(80, d3.max(opportunityData, d => d.rate) + 8)])
+        .nice()
+        .range([innerHeight, 0]);
 
-        const navHeight =
-          document.querySelector(".nav-wrap").offsetHeight;
+      const r = d3.scaleSqrt()
+        .domain(d3.extent(opportunityData, d => d.frequency))
+        .range(mobile ? [19, 46] : [24, 68]);
 
-        const targetTop =
-          target.getBoundingClientRect().top +
-          window.scrollY -
-          navHeight -
-          12;
+      const color = d3.scaleLinear()
+        .domain([25, 45, 70])
+        .range([COLORS.orange, COLORS.yellow, COLORS.greenBright])
+        .clamp(true);
 
-        window.scrollTo({
-          top: Math.max(0, targetTop),
-          behavior: "smooth"
+      g.append("g")
+        .attr("class", "grid")
+        .call(
+          d3.axisLeft(y)
+            .ticks(mobile ? 4 : 6)
+            .tickSize(-innerWidth)
+            .tickFormat("")
+        );
+
+      g.append("g")
+        .attr("class", "grid")
+        .attr("transform", `translate(0,${innerHeight})`)
+        .call(
+          d3.axisBottom(x)
+            .ticks(mobile ? 4 : 6)
+            .tickSize(-innerHeight)
+            .tickFormat("")
+        );
+
+      g.append("g")
+        .attr("class", "axis")
+        .attr("transform", `translate(0,${innerHeight})`)
+        .call(
+          d3.axisBottom(x)
+            .ticks(mobile ? 4 : 6)
+            .tickFormat(d3.format("d"))
+        );
+
+      g.append("g")
+        .attr("class", "axis")
+        .call(
+          d3.axisLeft(y)
+            .ticks(mobile ? 4 : 6)
+            .tickFormat(d => `$${d}`)
+        );
+
+      svg.append("text")
+        .attr("x", margin.left + innerWidth / 2)
+        .attr("y", height - 23)
+        .attr("fill", COLORS.muted)
+        .attr("text-anchor", "middle")
+        .attr("font-family", "DM Mono")
+        .attr("font-size", mobile ? 9 : 10)
+        .text("Posting frequency →");
+
+      svg.append("text")
+        .attr("transform", `translate(18 ${margin.top + innerHeight / 2}) rotate(-90)`)
+        .attr("fill", COLORS.muted)
+        .attr("text-anchor", "middle")
+        .attr("font-family", "DM Mono")
+        .attr("font-size", mobile ? 9 : 10)
+        .text("Average hourly rate →");
+
+      const node = g.selectAll(".opp-node")
+        .data(opportunityData)
+        .join("g")
+        .attr("class", "opp-node")
+        .attr("transform", d => `translate(${x(d.frequency)},${y(d.rate)})`)
+        .style("cursor", "default")
+        .on("pointerenter", function(event, d) {
+          d3.select(this).select("circle")
+            .attr("stroke", COLORS.text)
+            .attr("stroke-width", 1.5);
+
+          showTooltip(
+            event,
+            `
+              <strong>${d.target}</strong>
+              <span>${d.industry}<br>
+              ${d.frequency} postings · avg. $${d.rate}/hr</span>
+            `
+          );
+        })
+        .on("pointermove", moveTooltip)
+        .on("pointerleave", function() {
+          d3.select(this).select("circle")
+            .attr("stroke", "rgba(255,255,255,.18)")
+            .attr("stroke-width", 1);
+
+          hideTooltip();
         });
 
-        /*
-          Change URL without triggering native anchor scrolling.
-        */
-        history.replaceState(null, "", selector);
+      node.append("circle")
+        .attr("r", d => r(d.frequency))
+        .attr("fill", d => color(d.rate))
+        .attr("fill-opacity", .72)
+        .attr("stroke", "rgba(255,255,255,.18)");
 
-        setActive(target.id);
+      node.append("text")
+        .attr("text-anchor", "middle")
+        .attr("dominant-baseline", "central")
+        .attr("fill", COLORS.text)
+        .attr("font-size", mobile ? 8.5 : 10.5)
+        .attr("font-weight", 500)
+        .text(d => d.target)
+        .call(wrapSvgText, mobile ? 60 : 88);
+
+      if (!mobile) {
+        node.append("text")
+          .attr("y", d => r(d.frequency) + 14)
+          .attr("text-anchor", "middle")
+          .attr("fill", COLORS.muted)
+          .attr("font-family", "DM Mono")
+          .attr("font-size", 8)
+          .text(d => d.industry);
+      }
+    }
+
+    function renderFlowChart() {
+      const el = document.querySelector("#flowChart");
+      clearChart("#flowChart");
+
+      const viewportWidth = el.parentElement.clientWidth;
+      const mobile = viewportWidth < 640;
+
+      const width = mobile
+        ? Math.max(760, viewportWidth * 1.85)
+        : viewportWidth;
+
+      const height = mobile ? 560 : 620;
+
+      el.style.width = mobile ? `${width}px` : "100%";
+
+      const margin = {
+        top: 42,
+        right: mobile ? 120 : 150,
+        bottom: 40,
+        left: mobile ? 105 : 125
+      };
+
+      const svg = d3.select(el)
+        .append("svg")
+        .attr("viewBox", `0 0 ${width} ${height}`)
+        .attr("width", width)
+        .attr("height", height);
+
+      const data = {
+        nodes: flowData.nodes.map(d => ({...d})),
+        links: flowData.links.map(d => ({...d}))
+      };
+
+      const sankey = d3.sankey()
+        .nodeWidth(mobile ? 12 : 14)
+        .nodePadding(mobile ? 17 : 20)
+        .nodeAlign(d3.sankeyJustify)
+        .extent([
+          [margin.left, margin.top],
+          [width - margin.right, height - margin.bottom]
+        ]);
+
+      const graph = sankey(data);
+
+      const nodeColor = d => {
+        if (d.group === "platform") return COLORS.green;
+        if (d.group === "industry") return COLORS.yellow;
+        return COLORS.blue;
+      };
+
+      svg.append("g")
+        .attr("fill", "none")
+        .selectAll("path")
+        .data(graph.links)
+        .join("path")
+        .attr("d", d3.sankeyLinkHorizontal())
+        .attr("stroke", d => {
+          const start = nodeColor(d.source);
+          return start;
+        })
+        .attr("stroke-opacity", .18)
+        .attr("stroke-width", d => Math.max(1, d.width))
+        .on("pointerenter", function(event, d) {
+          d3.select(this)
+            .attr("stroke-opacity", .55);
+
+          showTooltip(
+            event,
+            `
+              <strong>${d.source.name} → ${d.target.name}</strong>
+              <span>${d.value} matched postings</span>
+            `
+          );
+        })
+        .on("pointermove", moveTooltip)
+        .on("pointerleave", function() {
+          d3.select(this)
+            .attr("stroke-opacity", .18);
+
+          hideTooltip();
+        });
+
+      const nodes = svg.append("g")
+        .selectAll("g")
+        .data(graph.nodes)
+        .join("g");
+
+      nodes.append("rect")
+        .attr("x", d => d.x0)
+        .attr("y", d => d.y0)
+        .attr("height", d => Math.max(2, d.y1 - d.y0))
+        .attr("width", d => d.x1 - d.x0)
+        .attr("rx", 3)
+        .attr("fill", nodeColor)
+        .attr("fill-opacity", .88);
+
+      nodes.append("text")
+        .attr("x", d => {
+          if (d.layer === 0) return d.x0 - 8;
+          if (d.x1 > width - margin.right - 30) return d.x1 + 8;
+          return d.x1 + 8;
+        })
+        .attr("y", d => (d.y0 + d.y1) / 2)
+        .attr("dy", ".35em")
+        .attr("text-anchor", d => d.layer === 0 ? "end" : "start")
+        .attr("fill", COLORS.textSoft)
+        .attr("font-size", mobile ? 10 : 11)
+        .attr("font-family", "Inter")
+        .text(d => d.name);
+
+      const columns = [
+        {
+          x: margin.left,
+          text: "Platform"
+        },
+        {
+          x: width / 2,
+          text: "Industry"
+        },
+        {
+          x: width - margin.right,
+          text: "Automation target"
+        }
+      ];
+
+      svg.selectAll(".column-title")
+        .data(columns)
+        .join("text")
+        .attr("x", d => d.x)
+        .attr("y", 20)
+        .attr("text-anchor", d => {
+          if (d.x === margin.left) return "start";
+          if (d.x === width - margin.right) return "end";
+          return "middle";
+        })
+        .attr("fill", COLORS.muted)
+        .attr("font-family", "DM Mono")
+        .attr("font-size", 9)
+        .attr("text-transform", "uppercase")
+        .text(d => d.text);
+    }
+
+    function renderProficiencyChart() {
+      const el = document.querySelector("#proficiencyChart");
+      clearChart("#proficiencyChart");
+
+      const width = el.clientWidth;
+      const mobile = width < 640;
+
+      const height = mobile ? 570 : 650;
+
+      const svg = d3.select(el)
+        .append("svg")
+        .attr("viewBox", `0 0 ${width} ${height}`)
+        .attr("width", width)
+        .attr("height", height);
+
+      const centerX = width / 2;
+      const centerY = mobile ? height / 2 - 5 : height / 2 + 4;
+
+      const radius = Math.min(
+        mobile ? width * .29 : width * .27,
+        mobile ? 125 : 220
+      );
+
+      const levels = 5;
+
+      const angleSlice = Math.PI * 2 / proficiencyData.length;
+
+      const rScale = d3.scaleLinear()
+        .domain([0, 100])
+        .range([0, radius]);
+
+      const radarGroup = svg.append("g")
+        .attr("transform", `translate(${centerX},${centerY})`);
+
+      for (let level = 1; level <= levels; level++) {
+        const levelRadius = radius * level / levels;
+
+        const points = proficiencyData.map((_, i) => {
+          const angle = angleSlice * i - Math.PI / 2;
+          return [
+            Math.cos(angle) * levelRadius,
+            Math.sin(angle) * levelRadius
+          ];
+        });
+
+        radarGroup.append("polygon")
+          .attr("points", points.map(d => d.join(",")).join(" "))
+          .attr("fill", "none")
+          .attr("stroke", COLORS.grid)
+          .attr("stroke-width", 1);
+      }
+
+      proficiencyData.forEach((d, i) => {
+        const angle = angleSlice * i - Math.PI / 2;
+        const x = Math.cos(angle) * radius;
+        const y = Math.sin(angle) * radius;
+
+        radarGroup.append("line")
+          .attr("x1", 0)
+          .attr("y1", 0)
+          .attr("x2", x)
+          .attr("y2", y)
+          .attr("stroke", COLORS.grid);
+      });
+
+      const radarLine = d3.lineRadial()
+        .radius(d => rScale(d.value))
+        .angle(d => d.angle)
+        .curve(d3.curveLinearClosed);
+
+      const knowledgeable = proficiencyData.map((d, i) => ({
+        angle: angleSlice * i,
+        value: d.knowledgeable
+      }));
+
+      const exploratory = proficiencyData.map((d, i) => ({
+        angle: angleSlice * i,
+        value: d.exploratory
+      }));
+
+      radarGroup.append("path")
+        .datum(knowledgeable)
+        .attr("d", radarLine)
+        .attr("fill", COLORS.green)
+        .attr("fill-opacity", .14)
+        .attr("stroke", COLORS.greenBright)
+        .attr("stroke-width", 2);
+
+      radarGroup.append("path")
+        .datum(exploratory)
+        .attr("d", radarLine)
+        .attr("fill", COLORS.yellow)
+        .attr("fill-opacity", .1)
+        .attr("stroke", COLORS.yellow)
+        .attr("stroke-width", 2);
+
+      radarGroup.selectAll(".knowledgeable-point")
+        .data(knowledgeable)
+        .join("circle")
+        .attr("cx", d => Math.cos(d.angle - Math.PI / 2) * rScale(d.value))
+        .attr("cy", d => Math.sin(d.angle - Math.PI / 2) * rScale(d.value))
+        .attr("r", 3.5)
+        .attr("fill", COLORS.greenBright);
+
+      radarGroup.selectAll(".exploratory-point")
+        .data(exploratory)
+        .join("circle")
+        .attr("cx", d => Math.cos(d.angle - Math.PI / 2) * rScale(d.value))
+        .attr("cy", d => Math.sin(d.angle - Math.PI / 2) * rScale(d.value))
+        .attr("r", 3.5)
+        .attr("fill", COLORS.yellow);
+
+      const labelRadius = radius + (mobile ? 36 : 55);
+
+      const labels = radarGroup.selectAll(".radar-label")
+        .data(proficiencyData)
+        .join("text")
+        .attr("class", "radar-label")
+        .attr("x", (d, i) =>
+          Math.cos(angleSlice * i - Math.PI / 2) * labelRadius
+        )
+        .attr("y", (d, i) =>
+          Math.sin(angleSlice * i - Math.PI / 2) * labelRadius
+        )
+        .attr("fill", COLORS.textSoft)
+        .attr("font-family", "DM Mono")
+        .attr("font-size", mobile ? 9 : 11)
+        .attr("text-anchor", (d, i) => {
+          const x = Math.cos(angleSlice * i - Math.PI / 2);
+
+          if (Math.abs(x) < .18) return "middle";
+          return x > 0 ? "start" : "end";
+        })
+        .attr("dominant-baseline", "middle")
+        .text(d => d.skill);
+
+      if (mobile) {
+        labels.call(wrapSvgText, 88, 1.1);
+      }
+
+      const legend = svg.append("g")
+        .attr(
+          "transform",
+          mobile
+            ? `translate(${width / 2 - 118},${height - 42})`
+            : `translate(${width - 310},${height - 42})`
+        );
+
+      [
+        {
+          label: "Higher-understanding clients",
+          color: COLORS.green
+        },
+        {
+          label: "Lower-understanding clients",
+          color: COLORS.yellow
+        }
+      ].forEach((item, i) => {
+        const x = mobile ? 0 : i * 160;
+        const y = mobile ? i * 18 : 0;
+
+        legend.append("circle")
+          .attr("cx", x)
+          .attr("cy", y)
+          .attr("r", 4)
+          .attr("fill", item.color);
+
+        legend.append("text")
+          .attr("x", x + 10)
+          .attr("y", y + 3.5)
+          .attr("fill", COLORS.textSoft)
+          .attr("font-family", "DM Mono")
+          .attr("font-size", 8)
+          .text(item.label);
+      });
+    }
+
+    function renderToolsChart() {
+      const el = document.querySelector("#toolsChart");
+      clearChart("#toolsChart");
+
+      const viewportWidth = el.parentElement.clientWidth;
+      const mobile = viewportWidth < 640;
+
+      const minCell = mobile ? 45 : 54;
+
+      const margin = {
+        top: mobile ? 92 : 105,
+        right: 25,
+        bottom: 28,
+        left: mobile ? 110 : 145
+      };
+
+      const desiredInnerWidth = tools.length * minCell;
+
+      const width = mobile
+        ? margin.left + desiredInnerWidth + margin.right
+        : viewportWidth;
+
+      const height = mobile
+        ? margin.top + tools.length * minCell + margin.bottom
+        : Math.max(580, width * .48);
+
+      el.style.width = mobile ? `${width}px` : "100%";
+
+      const svg = d3.select(el)
+        .append("svg")
+        .attr("viewBox", `0 0 ${width} ${height}`)
+        .attr("width", width)
+        .attr("height", height);
+
+      const innerWidth = width - margin.left - margin.right;
+      const innerHeight = height - margin.top - margin.bottom;
+
+      const x = d3.scaleBand()
+        .domain(tools)
+        .range([0, innerWidth])
+        .padding(.06);
+
+      const y = d3.scaleBand()
+        .domain(tools)
+        .range([0, innerHeight])
+        .padding(.06);
+
+      const maxValue = d3.max(toolMatrix.flat());
+
+      const color = d3.scaleLinear()
+        .domain([0, maxValue])
+        .range(["#19211d", COLORS.greenBright]);
+
+      const data = [];
+
+      tools.forEach((row, rowIndex) => {
+        tools.forEach((column, columnIndex) => {
+          data.push({
+            row,
+            column,
+            value: toolMatrix[rowIndex][columnIndex]
+          });
+        });
+      });
+
+      const g = svg.append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+      g.selectAll("rect")
+        .data(data)
+        .join("rect")
+        .attr("x", d => x(d.column))
+        .attr("y", d => y(d.row))
+        .attr("width", x.bandwidth())
+        .attr("height", y.bandwidth())
+        .attr("rx", 3)
+        .attr("fill", d => color(d.value))
+        .attr("fill-opacity", d =>
+          d.row === d.column ? .95 : .72
+        )
+        .on("pointerenter", function(event, d) {
+          d3.select(this)
+            .attr("stroke", COLORS.text)
+            .attr("stroke-width", 1);
+
+          showTooltip(
+            event,
+            `
+              <strong>${d.row} × ${d.column}</strong>
+              <span>${
+                d.row === d.column
+                  ? `${d.value} individual mentions`
+                  : `${d.value} co-occurrences`
+              }</span>
+            `
+          );
+        })
+        .on("pointermove", moveTooltip)
+        .on("pointerleave", function() {
+          d3.select(this).attr("stroke", null);
+          hideTooltip();
+        });
+
+      g.selectAll(".cell-value")
+        .data(data)
+        .join("text")
+        .attr("x", d => x(d.column) + x.bandwidth() / 2)
+        .attr("y", d => y(d.row) + y.bandwidth() / 2)
+        .attr("dy", ".35em")
+        .attr("text-anchor", "middle")
+        .attr("fill", d => d.value > maxValue * .55 ? "#0e1511" : COLORS.textSoft)
+        .attr("font-family", "DM Mono")
+        .attr("font-size", mobile ? 8 : 9)
+        .text(d => d.value || "");
+
+      svg.append("g")
+        .attr("transform", `translate(${margin.left},${margin.top - 10})`)
+        .selectAll("text")
+        .data(tools)
+        .join("text")
+        .attr("x", d => x(d) + x.bandwidth() / 2)
+        .attr("y", 0)
+        .attr("transform", d => {
+          const xPos = x(d) + x.bandwidth() / 2;
+          return `rotate(-42 ${xPos} 0)`;
+        })
+        .attr("text-anchor", "start")
+        .attr("fill", COLORS.textSoft)
+        .attr("font-family", "DM Mono")
+        .attr("font-size", mobile ? 8 : 9)
+        .text(d => d);
+
+      svg.append("g")
+        .attr("transform", `translate(${margin.left - 10},${margin.top})`)
+        .selectAll("text")
+        .data(tools)
+        .join("text")
+        .attr("x", 0)
+        .attr("y", d => y(d) + y.bandwidth() / 2)
+        .attr("dy", ".35em")
+        .attr("text-anchor", "end")
+        .attr("fill", COLORS.textSoft)
+        .attr("font-family", "DM Mono")
+        .attr("font-size", mobile ? 8 : 9)
+        .text(d => d);
+    }
+
+    function renderPayChart() {
+      const el = document.querySelector("#payChart");
+      clearChart("#payChart");
+
+      const width = el.clientWidth;
+      const mobile = width < 640;
+
+      const margin = mobile
+        ? { top: 38, right: 18, bottom: 55, left: 122 }
+        : { top: 50, right: 45, bottom: 62, left: 190 };
+
+      const rowHeight = mobile ? 62 : 72;
+
+      const height =
+        margin.top +
+        margin.bottom +
+        payData.length * rowHeight;
+
+      const innerWidth = width - margin.left - margin.right;
+      const innerHeight = height - margin.top - margin.bottom;
+
+      const svg = d3.select(el)
+        .append("svg")
+        .attr("viewBox", `0 0 ${width} ${height}`)
+        .attr("width", width)
+        .attr("height", height);
+
+      const x = d3.scaleLinear()
+        .domain([
+          0,
+          Math.ceil(d3.max(payData, d => d.high) / 20) * 20
+        ])
+        .range([0, innerWidth]);
+
+      const y = d3.scaleBand()
+        .domain(payData.map(d => d.role))
+        .range([0, innerHeight])
+        .padding(.46);
+
+      const g = svg.append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+      g.append("g")
+        .attr("class", "grid")
+        .call(
+          d3.axisBottom(x)
+            .ticks(mobile ? 4 : 7)
+            .tickSize(innerHeight)
+            .tickFormat("")
+        );
+
+      g.select(".domain").remove();
+
+      g.selectAll(".range-baseline")
+        .data(payData)
+        .join("line")
+        .attr("x1", 0)
+        .attr("x2", innerWidth)
+        .attr("y1", d => y(d.role) + y.bandwidth() / 2)
+        .attr("y2", d => y(d.role) + y.bandwidth() / 2)
+        .attr("stroke", "rgba(255,255,255,.055)");
+
+      g.selectAll(".range-line")
+        .data(payData)
+        .join("line")
+        .attr("x1", d => x(d.low))
+        .attr("x2", d => x(d.high))
+        .attr("y1", d => y(d.role) + y.bandwidth() / 2)
+        .attr("y2", d => y(d.role) + y.bandwidth() / 2)
+        .attr("stroke", COLORS.green)
+        .attr("stroke-opacity", .62)
+        .attr("stroke-width", mobile ? 8 : 10)
+        .attr("stroke-linecap", "round");
+
+      g.selectAll(".range-start")
+        .data(payData)
+        .join("circle")
+        .attr("cx", d => x(d.low))
+        .attr("cy", d => y(d.role) + y.bandwidth() / 2)
+        .attr("r", mobile ? 4 : 5)
+        .attr("fill", COLORS.surface)
+        .attr("stroke", COLORS.green)
+        .attr("stroke-width", 2);
+
+      g.selectAll(".range-end")
+        .data(payData)
+        .join("circle")
+        .attr("cx", d => x(d.high))
+        .attr("cy", d => y(d.role) + y.bandwidth() / 2)
+        .attr("r", mobile ? 4 : 5)
+        .attr("fill", COLORS.surface)
+        .attr("stroke", COLORS.green)
+        .attr("stroke-width", 2);
+
+      g.selectAll(".avg-dot")
+        .data(payData)
+        .join("circle")
+        .attr("cx", d => x(d.average))
+        .attr("cy", d => y(d.role) + y.bandwidth() / 2)
+        .attr("r", mobile ? 6 : 7)
+        .attr("fill", COLORS.greenBright)
+        .attr("stroke", COLORS.surface)
+        .attr("stroke-width", 2)
+        .on("pointerenter", function(event, d) {
+          showTooltip(
+            event,
+            `
+              <strong>${d.role}</strong>
+              <span>$${d.low}–$${d.high}/hr<br>
+              Average: $${d.average}/hr</span>
+            `
+          );
+        })
+        .on("pointermove", moveTooltip)
+        .on("pointerleave", hideTooltip);
+
+      g.append("g")
+        .attr("class", "axis")
+        .attr("transform", `translate(0,${innerHeight})`)
+        .call(
+          d3.axisBottom(x)
+            .ticks(mobile ? 4 : 7)
+            .tickFormat(d => `$${d}`)
+        );
+
+      g.selectAll(".role-label")
+        .data(payData)
+        .join("text")
+        .attr("x", -12)
+        .attr("y", d => y(d.role) + y.bandwidth() / 2)
+        .attr("dy", ".35em")
+        .attr("text-anchor", "end")
+        .attr("fill", COLORS.textSoft)
+        .attr("font-size", mobile ? 9 : 11)
+        .text(d => d.role)
+        .call(wrapSvgText, mobile ? 102 : 165);
+    }
+
+    function renderLandscapeChart() {
+      const el = document.querySelector("#landscapeChart");
+      clearChart("#landscapeChart");
+
+      const width = el.clientWidth;
+      const mobile = width < 640;
+
+      const height = mobile
+        ? Math.max(560, width * 1.4)
+        : Math.min(710, Math.max(560, width * .55));
+
+      const svg = d3.select(el)
+        .append("svg")
+        .attr("viewBox", `0 0 ${width} ${height}`)
+        .attr("width", width)
+        .attr("height", height);
+
+      const root = d3.hierarchy(landscapeData)
+        .sum(d => d.value || 0)
+        .sort((a, b) => b.value - a.value);
+
+      d3.treemap()
+        .size([width, height])
+        .paddingOuter(mobile ? 5 : 8)
+        .paddingTop(d => d.depth === 1 ? (mobile ? 23 : 27) : 0)
+        .paddingInner(mobile ? 3 : 4)
+        .round(true)(root);
+
+      const industryColor = d3.scaleOrdinal()
+        .domain(root.children.map(d => d.data.name))
+        .range([
+          "#48745b",
+          "#7f7446",
+          "#456b73",
+          "#715d4e",
+          "#635b79"
+        ]);
+
+      const industries = svg.selectAll(".industry")
+        .data(root.children)
+        .join("g")
+        .attr("class", "industry");
+
+      industries.append("rect")
+        .attr("x", d => d.x0)
+        .attr("y", d => d.y0)
+        .attr("width", d => d.x1 - d.x0)
+        .attr("height", d => d.y1 - d.y0)
+        .attr("rx", 6)
+        .attr("fill", d => industryColor(d.data.name))
+        .attr("fill-opacity", .28)
+        .attr("stroke", d => industryColor(d.data.name))
+        .attr("stroke-opacity", .55);
+
+      industries.append("text")
+        .attr("x", d => d.x0 + 8)
+        .attr("y", d => d.y0 + 16)
+        .attr("fill", COLORS.text)
+        .attr("font-size", mobile ? 9 : 11)
+        .attr("font-weight", 500)
+        .text(d => d.data.name);
+
+      const leaves = root.leaves();
+
+      const cells = svg.selectAll(".leaf")
+        .data(leaves)
+        .join("g")
+        .attr("class", "leaf")
+        .on("pointerenter", function(event, d) {
+          d3.select(this)
+            .select("rect")
+            .attr("stroke", COLORS.text)
+            .attr("stroke-width", 1.3);
+
+          const path = d.ancestors()
+            .reverse()
+            .slice(1)
+            .map(n => n.data.name)
+            .join(" → ");
+
+          showTooltip(
+            event,
+            `
+              <strong>${path}</strong>
+              <span>${d.value} postings</span>
+            `
+          );
+        })
+        .on("pointermove", moveTooltip)
+        .on("pointerleave", function() {
+          d3.select(this)
+            .select("rect")
+            .attr("stroke", "rgba(255,255,255,.1)")
+            .attr("stroke-width", 1);
+
+          hideTooltip();
+        });
+
+      cells.append("rect")
+        .attr("x", d => d.x0)
+        .attr("y", d => d.y0)
+        .attr("width", d => Math.max(0, d.x1 - d.x0))
+        .attr("height", d => Math.max(0, d.y1 - d.y0))
+        .attr("rx", 4)
+        .attr("fill", d => industryColor(d.ancestors()[2]?.data.name || d.parent?.data.name))
+        .attr("fill-opacity", .42)
+        .attr("stroke", "rgba(255,255,255,.1)");
+
+      cells.each(function(d) {
+        const w = d.x1 - d.x0;
+        const h = d.y1 - d.y0;
+
+        const minWidth = mobile ? 58 : 68;
+        const minHeight = mobile ? 32 : 38;
+
+        if (w < minWidth || h < minHeight) return;
+
+        const g = d3.select(this);
+
+        g.append("text")
+          .attr("x", d.x0 + 6)
+          .attr("y", d.y0 + 14)
+          .attr("fill", COLORS.text)
+          .attr("font-size", mobile ? 8 : 9.5)
+          .attr("font-weight", 500)
+          .text(d.data.name)
+          .call(wrapSvgText, Math.max(20, w - 12), 1.08);
+
+        if (h > 55 && w > 60) {
+          g.append("text")
+            .attr("x", d.x0 + 6)
+            .attr("y", d.y1 - 8)
+            .attr("fill", COLORS.textSoft)
+            .attr("font-family", "DM Mono")
+            .attr("font-size", mobile ? 7 : 8)
+            .text(`${d.value}`);
+        }
+      });
+    }
+
+    function renderAllCharts() {
+      renderOpportunityChart();
+      renderFlowChart();
+      renderProficiencyChart();
+      renderToolsChart();
+      renderPayChart();
+      renderLandscapeChart();
+    }
+
+    /*
+      ResizeObserver only reacts to actual width changes.
+      It does not run while vertically scrolling.
+    */
+
+    const chartRenderers = new Map([
+      ["opportunityChart", renderOpportunityChart],
+      ["flowChart", renderFlowChart],
+      ["proficiencyChart", renderProficiencyChart],
+      ["toolsChart", renderToolsChart],
+      ["payChart", renderPayChart],
+      ["landscapeChart", renderLandscapeChart]
+    ]);
+
+    const lastWidths = new WeakMap();
+    const resizeTimers = new WeakMap();
+
+    const resizeObserver = new ResizeObserver(entries => {
+      entries.forEach(entry => {
+        const element = entry.target;
+        const width = Math.round(entry.contentRect.width);
+
+        if (!width) return;
+
+        const lastWidth = lastWidths.get(element);
+
+        if (lastWidth && Math.abs(lastWidth - width) < 2) {
+          return;
+        }
+
+        lastWidths.set(element, width);
+
+        const oldTimer = resizeTimers.get(element);
+        if (oldTimer) cancelAnimationFrame(oldTimer);
+
+        const frame = requestAnimationFrame(() => {
+          const render = chartRenderers.get(element.id);
+          if (render) render();
+        });
+
+        resizeTimers.set(element, frame);
       });
     });
 
+    document.querySelectorAll(".d3-chart").forEach(chart => {
+      resizeObserver.observe(chart);
+    });
 
-    /* =========================================================
-       INITIAL STATE
+    /*
+      -------------------------------------------------------------------------
+      NAVIGATION
+      -------------------------------------------------------------------------
+      No scrollIntoView on vertical scroll.
+      No IntersectionObserver.
+      Horizontal nav motion never modifies the page's Y position.
+    */
 
-       Hash URLs are positioned once after layout settles.
-    ========================================================= */
+    (() => {
+      const nav = document.getElementById("caseNav");
+      const links = [...nav.querySelectorAll("a[href^='#']")];
 
-    function initialize() {
-      const hash = window.location.hash;
+      const sections = links
+        .map(link => document.querySelector(link.getAttribute("href")))
+        .filter(Boolean);
 
-      if (hash) {
-        const target = document.querySelector(hash);
+      let activeId = "";
+      let ticking = false;
 
-        if (target) {
+      function centerNavItem(link) {
+        const navRect = nav.getBoundingClientRect();
+        const linkRect = link.getBoundingClientRect();
+
+        const clipped =
+          linkRect.left < navRect.left + 8 ||
+          linkRect.right > navRect.right - 8;
+
+        if (!clipped) return;
+
+        const target =
+          link.offsetLeft +
+          link.offsetWidth / 2 -
+          nav.clientWidth / 2;
+
+        nav.scrollTo({
+          left: Math.max(0, target),
+          behavior: "smooth"
+        });
+      }
+
+      function setActive(id) {
+        if (id === activeId) return;
+        activeId = id;
+
+        links.forEach(link => {
+          const current =
+            link.getAttribute("href") === `#${id}`;
+
+          link.classList.toggle("active", current);
+
+          if (current) {
+            link.setAttribute("aria-current", "location");
+            centerNavItem(link);
+          } else {
+            link.removeAttribute("aria-current");
+          }
+        });
+      }
+
+      function updateCurrentSection() {
+        const navHeight =
+          document.querySelector(".nav-wrap").offsetHeight;
+
+        const trigger = navHeight + 60;
+
+        let current = sections[0];
+
+        for (const section of sections) {
+          if (section.getBoundingClientRect().top <= trigger) {
+            current = section;
+          } else {
+            break;
+          }
+        }
+
+        if (
+          window.innerHeight + window.scrollY >=
+          document.documentElement.scrollHeight - 24
+        ) {
+          current = sections[sections.length - 1];
+        }
+
+        if (current) setActive(current.id);
+
+        ticking = false;
+      }
+
+      window.addEventListener(
+        "scroll",
+        () => {
+          if (!ticking) {
+            requestAnimationFrame(updateCurrentSection);
+            ticking = true;
+          }
+        },
+        { passive: true }
+      );
+
+      links.forEach(link => {
+        link.addEventListener("click", event => {
+          const selector = link.getAttribute("href");
+          const target = document.querySelector(selector);
+
+          if (!target) return;
+
+          event.preventDefault();
+
           const navHeight =
             document.querySelector(".nav-wrap").offsetHeight;
 
-          const y =
+          const destination =
             target.getBoundingClientRect().top +
             window.scrollY -
             navHeight -
-            12;
+            10;
 
-          /*
-            Immediate jump only once on load.
-            No animation prevents the impression that the page is
-            fighting the user when opened with a hash.
-          */
-          window.scrollTo(0, Math.max(0, y));
-        }
-      }
+          window.scrollTo({
+            top: Math.max(0, destination),
+            behavior: "smooth"
+          });
 
-      updateActiveSection();
-    }
+          history.replaceState(null, "", selector);
+          setActive(target.id);
+        });
+      });
 
-    if (document.readyState === "complete") {
-      requestAnimationFrame(initialize);
-    } else {
-      window.addEventListener(
-        "load",
-        () => requestAnimationFrame(initialize),
-        { once: true }
-      );
-    }
-  })();
-</script>
+      requestAnimationFrame(updateCurrentSection);
+    })();
+
+    renderAllCharts();
+  </script>
 
 </body>
 </html>
